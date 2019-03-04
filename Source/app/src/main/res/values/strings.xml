@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">ALL TV</string>
+    <string name="browse_title">ALL TV</string>
+    <string name="etc">기타</string>
+    <string name="preferences">설정</string>
+    <string name="opensource">오픈소스 라이센스</string>
+    <string name="pooq">POOQ</string>
+    <string name="oksusu">옥수수</string>
+    <string name="settings_title">설정</string>
+    <string name="settings_desc">로그인 정보등을 설정합니다.</string>
+    <string name="oksusulogin_ok">옥수수 로그인 하였습니다.</string>
+    <string name="oksusulogin_fail">옥수수 로그인에 실패했습니다.</string>
+    <string name="oksususettings">옥수수 설정</string>
+    <string name="setdesc">로그인 및 화질 설정</string>
+    <string name="pooqsetdesc">아직 준비중입니다.</string>
+    <string name="notready">준비중입니다.</string>
+    <string name="id">아이디</string>
+    <string name="password">비밀번호</string>
+    <string name="auto">AUTO</string>
+    <string name="fullhd">Full HD</string>
+    <string name="hd">HD</string>
+    <string name="sd">SD</string>
+    <string name="mobile">모바일</string>
+    <string name="quality_set">시청 화질 설정</string>
+    <string name="set_save">설정 저장</string>
+    <string name="settingssave_error">설정 저장 실패</string>
+    <string name="nologin_error">로그인 정보가 없습니다.</string>
+    <string name="login_error_video">로그인 정보가 없어 비디오 재생정보를 가져올 수 없습니다.</string>
+    <string name="geturl_error">비디오 재생 정보 가져오기 실패</string>
+    <string name="input_error">아이디나 암호를 제대로 입력해 주세요.</string>
+    <string name="dologin_please">로그인이 필요합니다.</string>
+    <string name="pooqsettings">POOQ 설정</string>
+    <string name="select">선택</string>
+    <string name="error_fragment_message">문제가 발생했습니다.</string>
+    <string name="dismiss_error">계속 진행</string>
+</resources>
