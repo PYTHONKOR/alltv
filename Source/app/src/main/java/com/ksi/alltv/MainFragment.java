@@ -157,7 +157,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
                 getStringById(R.string.oksusu));
         mCategoryRowAdapter.add(new PageRow(oksusuHeader));
 
-        //Oksusu
+        //Pooq
         HeaderItem pooqHeader = new HeaderItem(Utils.Header.Pooq.ordinal(),
                 getStringById(R.string.pooq));
         mCategoryRowAdapter.add(new PageRow(pooqHeader));

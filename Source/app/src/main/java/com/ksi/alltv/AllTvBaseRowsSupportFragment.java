@@ -115,7 +115,6 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
 
     protected boolean isEmptyCategory(Utils.SiteType checkType) {
         return !mCategory.containsKey(checkType) || mCategory.get(checkType) == null || mCategory.get(checkType).size() == 0;
-
     }
 
     protected void playVideo(ChannelData playChannel) {
