@@ -9,5 +9,5 @@
  * 원활한 시청을 위해서는 옥수수 및 POOQ 계정이 있어야 합니다. 또한 각 계정은 적절한 요금제 상품에 가입되어 있어야 합니다.
  * 이 프로젝트에 같이 기여하고 싶으신 분은 언제든지 환영합니다.
  
-<img src='https://github.com/PYTHONKOR/alltv/blob/master/Screenshots/main.PNG' width='800' height='481'/>
-<img src='https://github.com/PYTHONKOR/alltv/blob/master/Screenshots/setting.PNG' width='800' height='481'/>
+<img src='https://github.com/PYTHONKOR/alltv/blob/master/Screenshots/main.png' width='800' height='481'/>
+<img src='https://github.com/PYTHONKOR/alltv/blob/master/Screenshots/setting.png' width='800' height='481'/>
