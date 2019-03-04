@@ -10,7 +10,7 @@
  * 이 프로젝트에 같이 기여하고 싶으신 분은 언제든지 환영합니다.
 
 ### License
- * [MIT License](License)
+ * [MIT License](LICENSE)
  
 <img src='https://github.com/PYTHONKOR/alltv/blob/master/Screenshots/main.png' width='800' height='481'/>
 <img src='https://github.com/PYTHONKOR/alltv/blob/master/Screenshots/setting.png' width='800' height='481'/>
