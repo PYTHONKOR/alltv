@@ -79,7 +79,14 @@ public class FetchChannelService extends IntentService {
             retBundle.putString(getResources().getString(AuthKeyStrId), mSiteProcessor.getAuthKey());
             retBundle.putSerializable(getResources().getString(R.string.SITETYPE_STR), siteType);
 
-            channelResultReceiver.send(Utils.Code.ServiceIntent_OK.ordinal(), retBundle);
+            String authKey = mSiteProcessor.getAuthKey();
+            int retCode = Utils.Code.ServiceIntent_OK.ordinal();
+
+            if(authKey == null || authKey.length() == 0) {
+                retCode = Utils.Code.ServiceIntent_Fail.ordinal();
+            }
+
+            channelResultReceiver.send(retCode, retBundle);
         }
     }
 }

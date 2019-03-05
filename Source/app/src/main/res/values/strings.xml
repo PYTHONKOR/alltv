@@ -33,4 +33,6 @@
     <string name="select">선택</string>
     <string name="error_fragment_message">문제가 발생했습니다.</string>
     <string name="dismiss_error">계속 진행</string>
+    <string name="oksusu_login_fail">옥수수 로그인에 실패했습니다.</string>
+    <string name="pooq_login_fail">POOQ 로그인에 실패했습니다.</string>
 </resources>

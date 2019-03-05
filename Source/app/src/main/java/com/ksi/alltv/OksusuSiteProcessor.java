@@ -69,6 +69,9 @@ public class OksusuSiteProcessor extends SiteProcessor {
 
     private void getLiveTvList() {
 
+        if (mAuthKey == null || mAuthKey.length() == 0)
+            return;
+
         String resultHtml = HttpRequest.get(getAppDataString(R.string.OKSUSU_CHANNEL_URL)).body();
 
         JsonParser jParser = new JsonParser();
@@ -130,7 +133,7 @@ public class OksusuSiteProcessor extends SiteProcessor {
 
         String receivedCookies = postRequest.header(getAppDataString(R.string.SETCOOKIE_STR));
 
-        if (receivedCookies.startsWith(getAppDataString(R.string.CORNAC_STR))) {
+        if (receivedCookies != null && receivedCookies.startsWith(getAppDataString(R.string.CORNAC_STR))) {
             mAuthKey = receivedCookies.substring(receivedCookies
                     .lastIndexOf(getAppDataString(R.string.CORNAC_STR)), receivedCookies.lastIndexOf(getAppDataString(R.string.DOMAIN_STR)));
         }

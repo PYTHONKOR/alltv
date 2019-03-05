@@ -53,6 +53,10 @@ public abstract class SiteProcessor {
         return mContext.getResources().getString(resourceId);
     }
 
+    public final int getAppDataInt(int resourceId) {
+        return mContext.getResources().getInteger(resourceId);
+    }
+
     public ArrayList<ChannelData> getChannelList() {
         return mChannelDatas;
     }

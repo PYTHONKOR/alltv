@@ -41,7 +41,8 @@ import java.util.HashMap;
 public class Utils {
 
     public enum Code {
-        CodeStart, OksusuSave, PooqSave, SettingsRequestCode, ServiceIntent_OK,
+        CodeStart, OksusuSave, PooqSave, SettingsRequestCode,
+        ServiceIntent_OK, ServiceIntent_Fail,
         NoAuthKey_err, NoVideoUrl_err,
         FetchVideoUrlTask_OK,
         FetchOksusuAuthKeyTask_OK, FetchOksusuAuthKeyTask_FAIL

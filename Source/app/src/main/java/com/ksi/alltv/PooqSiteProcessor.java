@@ -65,6 +65,9 @@ public class PooqSiteProcessor extends SiteProcessor {
 
     private void getLiveTvList() {
 
+        if (mAuthKey == null || mAuthKey.length() == 0)
+            return;
+
         String resultJson = HttpRequest.get(getAppDataString(R.string.POOQ_CHANNELLIST_URL), true,
                 getAppDataString(R.string.DEVICETYPEID_STR), getAppDataString(R.string.PC_STR),
                 getAppDataString(R.string.MARKETTYPEID_STR), getAppDataString(R.string.GENERIC_STR),
@@ -117,6 +120,12 @@ public class PooqSiteProcessor extends SiteProcessor {
                 getAppDataString(R.string.CREDENTIAL_STR), getAppDataString(R.string.POOQ_API_ACCESSKEY_STR)).body();
 
         JsonParser parser = new JsonParser();
+
+        int retCode = parser.parse(resultJson).getAsJsonObject().get(getAppDataString(R.string.RETURNCODE_TAG)).getAsInt();
+
+        if (retCode != getAppDataInt(R.integer.POOQ_SUCCESS_CODE)) {
+            return;
+        }
 
         mAuthKey = Utils.removeQuote(parser.parse(resultJson).getAsJsonObject().
                 get(getAppDataString(R.string.RESULT_STR)).getAsJsonObject().

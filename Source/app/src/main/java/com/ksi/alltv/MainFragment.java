@@ -265,6 +265,25 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
                     }
 
                     getFragmentManager().beginTransaction().remove(mSpinnerFragment[siteType.ordinal()]).commit();
+
+                    if (!Hawk.put(getStringById(R.string.SETTINGS_STR), mGson.toJson(mSettingsData))) {
+                        Utils.showToast(getContext(), R.string.settingssave_error);
+                        return;
+                    }
+                }
+                break;
+            case ServiceIntent_Fail:
+                Utils.SiteType siteType = (Utils.SiteType) resultData.get(getStringById(R.string.SITETYPE_STR));
+
+                getFragmentManager().beginTransaction().remove(mSpinnerFragment[siteType.ordinal()]).commit();
+
+                switch (siteType) {
+                    case Oksusu:
+                        Utils.showToast(getContext(), R.string.oksusu_login_fail);
+                        break;
+                    case Pooq:
+                        Utils.showToast(getContext(), R.string.pooq_login_fail);
+                        break;
                 }
                 break;
         }
@@ -275,16 +294,11 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
         switch (Utils.Code.values()[requestCode]) {
             case SettingsRequestCode:
-                if(resultCode == 0)
+                if (resultCode == 0)
                     return;
 
                 String settingsStr = data.getStringExtra(getStringById(R.string.SETTINGSDATA_STR));
                 mSettingsData = mGson.fromJson(settingsStr, SettingsData.class);
-
-                if (!Hawk.put(getStringById(R.string.SETTINGS_STR), mGson.toJson(mSettingsData))) {
-                    Utils.showToast(getContext(), R.string.settingssave_error);
-                    return;
-                }
 
                 if (resultCode == Utils.Code.OksusuSave.ordinal()) {
                     OksusuRowSupportFragment.setQualityType(mSettingsData.mOksusuSettings.mQualityType);

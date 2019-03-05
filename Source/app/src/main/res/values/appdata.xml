@@ -76,7 +76,9 @@
     <string name="POOQ_FHD_QUALITY_TAG">5000</string>
     <string name="ISRADIO_TAG">isRadio</string>
     <string name="YES_STR">Y</string>
+    <string name="RETURNCODE_TAG">returnCode</string>
 
     <integer name="GRID_ITEM_WIDTH">300</integer>
     <integer name="GRID_ITEM_HEIGHT">200</integer>
+    <integer name="POOQ_SUCCESS_CODE">200</integer>
 </resources>
