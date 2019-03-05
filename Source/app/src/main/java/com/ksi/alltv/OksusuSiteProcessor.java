@@ -61,8 +61,8 @@ public class OksusuSiteProcessor extends SiteProcessor {
 
     @Override
     public boolean doProcess(SettingsData inSettingsData) {
-        getLiveTvList();
         doLogin(inSettingsData);
+        getLiveTvList();
 
         return true;
     }
