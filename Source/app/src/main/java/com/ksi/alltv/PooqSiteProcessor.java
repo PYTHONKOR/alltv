@@ -97,6 +97,8 @@ public class PooqSiteProcessor extends SiteProcessor {
                 chData.setStillImageUrl(Utils.removeQuote(chObj.get(getAppDataString(R.string.CHANNELIMAGE_STR)).getAsString()));
                 chData.setId(Utils.removeQuote(chObj.get(getAppDataString(R.string.ID_STR)).getAsString()));
                 chData.setCategoryId(categoryId);
+                chData.setAudioChannel(Utils.removeQuote(chObj.get(getAppDataString(R.string.ISRADIO_TAG)).getAsString())
+                        .equals(getAppDataString(R.string.YES_STR)));
 
                 mChannelDatas.add(chData);
             }

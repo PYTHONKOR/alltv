@@ -24,6 +24,9 @@
 
 package com.ksi.alltv;
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -40,9 +43,11 @@ import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 
-public class PlayerActivity extends FragmentActivity implements Player.EventListener {
+public class PlayerActivity extends FragmentActivity implements Player.EventListener, Target {
 
     static boolean active = false;
 
@@ -69,6 +74,10 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         Uri uriLive = Uri.parse(item.getVideoUrl());
 
         HlsMediaSource mediaSourcelive = new HlsMediaSource.Factory(mDataSourceFactory).setAllowChunklessPreparation(true).createMediaSource(uriLive);
+
+        if (item.isAudioChannel()) {
+            Picasso.get().load(item.getStillImageUrl()).into(this);
+        }
 
         mPlayer.prepare(mediaSourcelive);
         mPlayer.setPlayWhenReady(true);
@@ -149,6 +158,22 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
     @Override
     public void onSeekProcessed() {
+
+    }
+
+    @Override
+    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+        Drawable d = new BitmapDrawable(getResources(), bitmap);
+        mPlayerView.setDefaultArtwork(d);
+    }
+
+    @Override
+    public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+
+    }
+
+    @Override
+    public void onPrepareLoad(Drawable placeHolderDrawable) {
 
     }
 }

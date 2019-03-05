@@ -37,6 +37,7 @@ public class ChannelData implements Parcelable {
     private String mTitle;
     private String mStillImageUrl;
     private String[] mVideoUrl = new String[QualityType.values().length];
+    private Boolean mAudioChannel = false;
 
     public String getId() {
         return mId;
@@ -78,6 +79,10 @@ public class ChannelData implements Parcelable {
         this.mStillImageUrl = imageUrl;
     }
 
+    public Boolean isAudioChannel() { return mAudioChannel; }
+
+    public void setAudioChannel(Boolean setAudio) { this.mAudioChannel = setAudio; }
+
     public ChannelData() {
         //Constructor
     }
@@ -90,6 +95,7 @@ public class ChannelData implements Parcelable {
                 ", mTitle='" + mTitle + '\'' +
                 ", mStillImageUrl='" + mStillImageUrl + '\'' +
                 ", mVideoUrl='" + mVideoUrl.toString() + '\'' +
+                "mAudioChannel=" + mAudioChannel +
                 '}';
     }
 
@@ -105,6 +111,7 @@ public class ChannelData implements Parcelable {
         dest.writeString(this.mTitle);
         dest.writeString(this.mStillImageUrl);
         dest.writeStringArray(this.mVideoUrl);
+        dest.writeByte((byte) (this.mAudioChannel ? 1 : 0));
     }
 
     protected ChannelData(Parcel in) {
@@ -113,6 +120,7 @@ public class ChannelData implements Parcelable {
         this.mTitle = in.readString();
         this.mStillImageUrl = in.readString();
         in.readStringArray(this.mVideoUrl);
+        this.mAudioChannel = in.readByte() != 0;
     }
 
     public static final Parcelable.Creator<ChannelData> CREATOR = new Parcelable.Creator<ChannelData>() {
