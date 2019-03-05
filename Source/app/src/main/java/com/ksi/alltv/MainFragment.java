@@ -24,6 +24,8 @@
 
 package com.ksi.alltv;
 
+import com.ksi.alltv.BuildConfig;
+
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -170,6 +172,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
         ArrayObjectAdapter gridRowAdapter = new ArrayObjectAdapter(gridItemPresenter);
         gridRowAdapter.add(getStringById(R.string.preferences));
         gridRowAdapter.add(getStringById(R.string.opensource));
+        gridRowAdapter.add(getStringById(R.string.version_str) + " " + BuildConfig.VERSION_NAME);
 
         mCategoryRowAdapter.add(new ListRow(gridHeader, gridRowAdapter));
     }

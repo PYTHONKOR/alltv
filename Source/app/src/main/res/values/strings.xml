@@ -35,4 +35,5 @@
     <string name="dismiss_error">계속 진행</string>
     <string name="oksusu_login_fail">옥수수 로그인에 실패했습니다.</string>
     <string name="pooq_login_fail">POOQ 로그인에 실패했습니다.</string>
+    <string name="version_str">버전 :</string>
 </resources>
