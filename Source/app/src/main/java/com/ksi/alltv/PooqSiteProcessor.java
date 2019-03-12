@@ -111,21 +111,21 @@ public class PooqSiteProcessor extends SiteProcessor {
     public void doLogin(SettingsData inSettingsData) {
 
         String requestUrl = getAppDataString(R.string.POOQ_LOGIN_URL) + "?" +
-                getAppDataString(R.string.MODE_STR)  + "=" + getAppDataString(R.string.ID_STR) + "&" +
-                getAppDataString(R.string.ID_STR)  + "=" + inSettingsData.mPooqSettings.mId + "&" +
-                getAppDataString(R.string.PASSWORD_STR)  + "=" + inSettingsData.mPooqSettings.mPassword + "&" +
-                getAppDataString(R.string.POOQ_CREDENTIAL_STR)  + "=" + getAppDataString(R.string.POOQ_CREDENTIAL_STR) + "&" +
-                getAppDataString(R.string.DEVICETYPEID_STR)  + "=" + getAppDataString(R.string.PC_STR) + "&" +
-                getAppDataString(R.string.MARKETTYPEID_STR)  + "=" + getAppDataString(R.string.GENERIC_STR) + "&" +
-                getAppDataString(R.string.CREDENTIAL_STR)  + "=" + getAppDataString(R.string.POOQ_API_ACCESSKEY_STR);
+                getAppDataString(R.string.MODE_STR) + "=" + getAppDataString(R.string.ID_STR) + "&" +
+                getAppDataString(R.string.ID_STR) + "=" + inSettingsData.mPooqSettings.mId + "&" +
+                getAppDataString(R.string.PASSWORD_STR) + "=" + inSettingsData.mPooqSettings.mPassword + "&" +
+                getAppDataString(R.string.POOQ_CREDENTIAL_STR) + "=" + getAppDataString(R.string.POOQ_CREDENTIAL_STR) + "&" +
+                getAppDataString(R.string.DEVICETYPEID_STR) + "=" + getAppDataString(R.string.PC_STR) + "&" +
+                getAppDataString(R.string.MARKETTYPEID_STR) + "=" + getAppDataString(R.string.GENERIC_STR) + "&" +
+                getAppDataString(R.string.CREDENTIAL_STR) + "=" + getAppDataString(R.string.POOQ_API_ACCESSKEY_STR);
 
         String resultJson = HttpRequest.post(requestUrl, true).body();
 
         JsonParser parser = new JsonParser();
 
-        int retCode = parser.parse(resultJson).getAsJsonObject().get(getAppDataString(R.string.RETURNCODE_TAG)).getAsInt();
+        JsonElement returnCode = parser.parse(resultJson).getAsJsonObject().get(getAppDataString(R.string.RETURNCODE_TAG));
 
-        if (retCode != getAppDataInt(R.integer.POOQ_SUCCESS_CODE)) {
+        if (returnCode == null || returnCode.getAsInt() != getAppDataInt(R.integer.POOQ_SUCCESS_CODE)) {
             return;
         }
 
