@@ -110,14 +110,16 @@ public class PooqSiteProcessor extends SiteProcessor {
 
     public void doLogin(SettingsData inSettingsData) {
 
-        String resultJson = HttpRequest.post(getAppDataString(R.string.POOQ_LOGIN_URL), true,
-                getAppDataString(R.string.MODE_STR), getAppDataString(R.string.ID_STR),
-                getAppDataString(R.string.ID_STR), inSettingsData.mPooqSettings.mId,
-                getAppDataString(R.string.PASSWORD_STR), inSettingsData.mPooqSettings.mPassword,
-                getAppDataString(R.string.POOQ_CREDENTIAL_STR), getAppDataString(R.string.POOQ_CREDENTIAL_STR),
-                getAppDataString(R.string.DEVICETYPEID_STR), getAppDataString(R.string.PC_STR),
-                getAppDataString(R.string.MARKETTYPEID_STR), getAppDataString(R.string.GENERIC_STR),
-                getAppDataString(R.string.CREDENTIAL_STR), getAppDataString(R.string.POOQ_API_ACCESSKEY_STR)).body();
+        String requestUrl = getAppDataString(R.string.POOQ_LOGIN_URL) + "?" +
+                getAppDataString(R.string.MODE_STR)  + "=" + getAppDataString(R.string.ID_STR) + "&" +
+                getAppDataString(R.string.ID_STR)  + "=" + inSettingsData.mPooqSettings.mId + "&" +
+                getAppDataString(R.string.PASSWORD_STR)  + "=" + inSettingsData.mPooqSettings.mPassword + "&" +
+                getAppDataString(R.string.POOQ_CREDENTIAL_STR)  + "=" + getAppDataString(R.string.POOQ_CREDENTIAL_STR) + "&" +
+                getAppDataString(R.string.DEVICETYPEID_STR)  + "=" + getAppDataString(R.string.PC_STR) + "&" +
+                getAppDataString(R.string.MARKETTYPEID_STR)  + "=" + getAppDataString(R.string.GENERIC_STR) + "&" +
+                getAppDataString(R.string.CREDENTIAL_STR)  + "=" + getAppDataString(R.string.POOQ_API_ACCESSKEY_STR);
+
+        String resultJson = HttpRequest.post(requestUrl, true).body();
 
         JsonParser parser = new JsonParser();
 
