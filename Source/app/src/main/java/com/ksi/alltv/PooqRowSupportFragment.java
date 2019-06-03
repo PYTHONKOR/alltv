@@ -77,20 +77,15 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
 
         if (item instanceof ChannelData) {
 
-            if (((ChannelData) item).getVideoUrl() == null) {
+            String authKey = mAuthKey.get(Utils.SiteType.Pooq);
 
-                String authKey = mAuthKey.get(Utils.SiteType.Pooq);
-
-                if (authKey == null || authKey.length() < 10) {
-                    Utils.showToast(getContext(), getStringById(R.string.nologin_error));
-                    return;
-                }
-
-                PooqFetchVideoUrlTask runTask = new PooqFetchVideoUrlTask();
-                runTask.execute(mChannels.get(mType).indexOf(item));
-            } else {
-                playVideo((ChannelData) item);
+            if (authKey == null || authKey.length() < 10) {
+                Utils.showToast(getContext(), getStringById(R.string.nologin_error));
+                return;
             }
+
+            PooqFetchVideoUrlTask runTask = new PooqFetchVideoUrlTask();
+            runTask.execute(mChannels.get(mType).indexOf(item));
         }
     }
 

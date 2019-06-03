@@ -82,20 +82,15 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
                 return;
             }
 
-            if (((ChannelData) item).getVideoUrl() == null) {
+            String authKey = mAuthKey.get(mType);
 
-                String authKey = mAuthKey.get(mType);
-
-                if (authKey == null || authKey.length() < 10) {
-                    Utils.showToast(getContext(), getStringById(R.string.nologin_error));
-                    return;
-                }
-
-                OksusuFetchVideoUrlTask runTask = new OksusuFetchVideoUrlTask();
-                runTask.execute(mChannels.get(mType).indexOf(item));
-            } else {
-                playVideo((ChannelData) item);
+            if (authKey == null || authKey.length() < 10) {
+                Utils.showToast(getContext(), getStringById(R.string.nologin_error));
+                return;
             }
+
+            OksusuFetchVideoUrlTask runTask = new OksusuFetchVideoUrlTask();
+            runTask.execute(mChannels.get(mType).indexOf(item));
         }
     }
 
