@@ -97,12 +97,12 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
         } else {
 
-            mSettingsData.mOksusuSettings.mId = "";
-            mSettingsData.mOksusuSettings.mPassword = "";
+            mSettingsData.mOksusuSettings.mId = getStringById(R.string.OksusuId);
+            mSettingsData.mOksusuSettings.mPassword = getStringById(R.string.OksusuPwd);
             mSettingsData.mOksusuSettings.mQualityType = SettingsData.OksusuQualityType.FullHD;
 
-            mSettingsData.mPooqSettings.mId = "";
-            mSettingsData.mPooqSettings.mPassword = "";
+            mSettingsData.mPooqSettings.mId = getStringById(R.string.PooqId);
+            mSettingsData.mPooqSettings.mPassword = getStringById(R.string.PooqId);
             mSettingsData.mPooqSettings.mQualityType = SettingsData.PooqQualityType.FHD;
 
             OksusuRowSupportFragment.setQualityType(mSettingsData.mOksusuSettings.mQualityType);
