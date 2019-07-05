@@ -25,6 +25,7 @@
 package com.ksi.alltv;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -77,6 +78,9 @@ public class OksusuSiteProcessor extends SiteProcessor {
         JsonParser jParser = new JsonParser();
         JsonArray jArray = jParser.parse(resultHtml).getAsJsonObject().getAsJsonArray(getAppDataString(R.string.CHANNELS_TAG));
 
+        mChannelDatas.clear();
+        mCategoryDatas.clear();
+
         // Channels
         for (JsonElement arr : jArray) {
             JsonObject channelObj = arr.getAsJsonObject();
@@ -85,7 +89,13 @@ public class OksusuSiteProcessor extends SiteProcessor {
                 continue;
 
             ChannelData chData = new ChannelData();
-            chData.setTitle(Utils.removeQuote(channelObj.get(getAppDataString(R.string.CHANNELNAME_TAG)).getAsString()));
+
+            String channelName = Utils.removeQuote(channelObj.get(getAppDataString(R.string.CHANNELNAME_TAG)).getAsString());
+
+            JsonArray programs = channelObj.getAsJsonArray(getAppDataString(R.string.PROGRAMS_TAG));
+            String programName = Utils.removeQuote(programs.get(0).getAsJsonObject().get(getAppDataString(R.string.PROGRAMNAME_TAG)).getAsString());
+
+            chData.setTitle(channelName + " - " + programName);
 
             String stillImageUrl = Utils.removeQuote(channelObj.get(getAppDataString(R.string.STILLIMAGE_TAG)).getAsString());
 

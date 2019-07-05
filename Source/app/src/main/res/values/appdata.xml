@@ -6,6 +6,8 @@
     <string name="AUTOURL_TAG">hlsUrlPhoneAUTO</string>
     <string name="CHANNELNAME_TAG">channelName</string>
     <string name="STILLIMAGE_TAG">stillImageName</string>
+    <string name="PROGRAMS_TAG">programs</string>
+    <string name="PROGRAMNAME_TAG">programName</string>
     <string name="SERVICEID_TAG">serviceId</string>
     <string name="CHANNELCATEGORY_TAG">genreCd</string>
     <string name="CATEGORYNO_TAG">cdNo</string>
@@ -64,6 +66,7 @@
     <string name="GENRETITLE_STR">GenreTitle</string>
     <string name="CHANNELTITLE_STR">channelTitle</string>
     <string name="CHANNELIMAGE_STR">channelImage</string>
+    <string name="TITLENAME_STR">title</string>
     <string name="MODE_STR">mode</string>
     <string name="SITETYPE_STR">sitetype</string>
     <string name="SETTINGS_STR">Settings</string>

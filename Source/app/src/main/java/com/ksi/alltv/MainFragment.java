@@ -46,6 +46,7 @@ import android.support.v4.content.ContextCompat;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.orhanobut.hawk.Hawk;
@@ -81,6 +82,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
     }
 
     private void initOnCreated() {
+
         Hawk.init(getContext())
                 //.setEncryptionMethod(HawkBuilder.EncryptionMethod.HIGHEST)
                 .build();
@@ -89,6 +91,19 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
             String settingsStr = Hawk.get(getStringById(R.string.SETTINGS_STR));
             mSettingsData = mGson.fromJson(settingsStr, SettingsData.class);
+
+            OksusuRowSupportFragment.setQualityType(mSettingsData.mOksusuSettings.mQualityType);
+            PooqRowSupportFragment.setQualityType(mSettingsData.mPooqSettings.mQualityType);
+
+        } else {
+
+            mSettingsData.mOksusuSettings.mId = "";
+            mSettingsData.mOksusuSettings.mPassword = "";
+            mSettingsData.mOksusuSettings.mQualityType = SettingsData.OksusuQualityType.FullHD;
+
+            mSettingsData.mPooqSettings.mId = "";
+            mSettingsData.mPooqSettings.mPassword = "";
+            mSettingsData.mPooqSettings.mQualityType = SettingsData.PooqQualityType.FHD;
 
             OksusuRowSupportFragment.setQualityType(mSettingsData.mOksusuSettings.mQualityType);
             PooqRowSupportFragment.setQualityType(mSettingsData.mPooqSettings.mQualityType);
@@ -112,6 +127,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
     }
 
     private void startServiceIntent(Utils.SiteType inSiteType) {
+
         mSpinnerFragment[inSiteType.ordinal()] = new SpinnerFragment();
         getFragmentManager().beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment[inSiteType.ordinal()]).commit();
 

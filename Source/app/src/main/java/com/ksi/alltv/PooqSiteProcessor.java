@@ -25,6 +25,7 @@
 package com.ksi.alltv;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -78,6 +79,9 @@ public class PooqSiteProcessor extends SiteProcessor {
         JsonArray jArray = jParser.parse(resultJson).getAsJsonObject().
                 get(getAppDataString(R.string.RESULT_STR)).getAsJsonObject().getAsJsonArray(getAppDataString(R.string.LIST_STR));
 
+        mChannelDatas.clear();
+        mCategoryDatas.clear();
+
         for (JsonElement arr : jArray) {
             JsonObject categoryObj = arr.getAsJsonObject();
 
@@ -96,7 +100,11 @@ public class PooqSiteProcessor extends SiteProcessor {
                 JsonObject chObj = chEle.getAsJsonObject();
 
                 ChannelData chData = new ChannelData();
-                chData.setTitle(Utils.removeQuote(chObj.get(getAppDataString(R.string.CHANNELTITLE_STR)).getAsString()));
+
+                String channelName = Utils.removeQuote(chObj.get(getAppDataString(R.string.CHANNELTITLE_STR)).getAsString());
+                String programName = Utils.removeQuote(chObj.get(getAppDataString(R.string.TITLENAME_STR)).getAsString());
+
+                chData.setTitle(channelName + " - " + programName);
                 chData.setStillImageUrl(Utils.removeQuote(chObj.get(getAppDataString(R.string.CHANNELIMAGE_STR)).getAsString()));
                 chData.setId(Utils.removeQuote(chObj.get(getAppDataString(R.string.ID_STR)).getAsString()));
                 chData.setCategoryId(categoryId);
