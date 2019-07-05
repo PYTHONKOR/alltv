@@ -102,7 +102,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
             mSettingsData.mOksusuSettings.mQualityType = SettingsData.OksusuQualityType.FullHD;
 
             mSettingsData.mPooqSettings.mId = getStringById(R.string.PooqId);
-            mSettingsData.mPooqSettings.mPassword = getStringById(R.string.PooqId);
+            mSettingsData.mPooqSettings.mPassword = getStringById(R.string.PooqPwd);
             mSettingsData.mPooqSettings.mQualityType = SettingsData.PooqQualityType.FHD;
 
             OksusuRowSupportFragment.setQualityType(mSettingsData.mOksusuSettings.mQualityType);
