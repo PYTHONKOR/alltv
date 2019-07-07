@@ -35,6 +35,7 @@ import com.squareup.picasso.Picasso;
 
 
 public class CardPresenter extends Presenter {
+
     private static final String TAG = CardPresenter.class.getSimpleName();
 
     private static final int CARD_WIDTH = 313;
@@ -85,8 +86,9 @@ public class CardPresenter extends Presenter {
         ImageCardView cardView = (ImageCardView) viewHolder.view;
 
         Log.d(TAG, "onBindViewHolder");
+
         if (tvCh.getStillImageUrl() != null) {
-            cardView.setTitleText(tvCh.getTitle());
+            cardView.setTitleText(tvCh.getTitle() + " - " + tvCh.getProgram());
             cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
 
             Picasso.get().load(tvCh.getStillImageUrl())

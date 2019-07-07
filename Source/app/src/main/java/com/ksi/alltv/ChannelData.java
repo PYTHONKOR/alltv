@@ -35,6 +35,7 @@ public class ChannelData implements Parcelable {
     private String mId;
     private int mCategoryId;
     private String mTitle;
+    private String mProgram;
     private String mStillImageUrl;
     private String[] mVideoUrl = new String[QualityType.values().length];
     private Boolean mAudioChannel = false;
@@ -61,6 +62,14 @@ public class ChannelData implements Parcelable {
 
     public void setTitle(String title) {
         this.mTitle = title;
+    }
+
+    public String getProgram() {
+        return mProgram;
+    }
+
+    public void setProgram(String program) {
+        this.mProgram = program;
     }
 
     public String getVideoUrl() {
@@ -93,6 +102,7 @@ public class ChannelData implements Parcelable {
                 "mId=" + mId +
                 "mCategoryId=" + mCategoryId +
                 ", mTitle='" + mTitle + '\'' +
+                ", mProgram='" + mProgram + '\'' +
                 ", mStillImageUrl='" + mStillImageUrl + '\'' +
                 ", mVideoUrl='" + mVideoUrl.toString() + '\'' +
                 "mAudioChannel=" + mAudioChannel +
@@ -109,6 +119,7 @@ public class ChannelData implements Parcelable {
         dest.writeString(this.mId);
         dest.writeInt(this.mCategoryId);
         dest.writeString(this.mTitle);
+        dest.writeString(this.mProgram);
         dest.writeString(this.mStillImageUrl);
         dest.writeStringArray(this.mVideoUrl);
         dest.writeByte((byte) (this.mAudioChannel ? 1 : 0));
@@ -118,6 +129,7 @@ public class ChannelData implements Parcelable {
         this.mId = in.readString();
         this.mCategoryId = in.readInt();
         this.mTitle = in.readString();
+        this.mProgram = in.readString();
         this.mStillImageUrl = in.readString();
         in.readStringArray(this.mVideoUrl);
         this.mAudioChannel = in.readByte() != 0;

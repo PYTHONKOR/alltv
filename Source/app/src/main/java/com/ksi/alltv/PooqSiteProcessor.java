@@ -104,7 +104,8 @@ public class PooqSiteProcessor extends SiteProcessor {
                 String channelName = Utils.removeQuote(chObj.get(getAppDataString(R.string.CHANNELTITLE_STR)).getAsString());
                 String programName = Utils.removeQuote(chObj.get(getAppDataString(R.string.TITLENAME_STR)).getAsString());
 
-                chData.setTitle(channelName + " - " + programName);
+                chData.setTitle(channelName);
+                chData.setProgram(programName);
                 chData.setStillImageUrl(Utils.removeQuote(chObj.get(getAppDataString(R.string.CHANNELIMAGE_STR)).getAsString()));
                 chData.setId(Utils.removeQuote(chObj.get(getAppDataString(R.string.ID_STR)).getAsString()));
                 chData.setCategoryId(categoryId);

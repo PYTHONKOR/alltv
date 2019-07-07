@@ -47,6 +47,7 @@ import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.orhanobut.hawk.Hawk;
@@ -79,6 +80,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
         if (mSettingsData.mPooqSettings.mId != null && mSettingsData.mPooqSettings.mId.length() > 0) {
             startServiceIntent(Utils.SiteType.Pooq);
         }
+
     }
 
     private void initOnCreated() {
@@ -141,6 +143,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
         serviceIntent.putExtra(getStringById(R.string.SITETYPE_STR), inSiteType);
 
         getActivity().startService(serviceIntent);
+
     }
 
     public class PageRowFragmentFactory extends BrowseSupportFragment.FragmentFactory<Fragment> {
@@ -194,9 +197,11 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
     }
 
     private void setupEventListeners() {
+
         setOnItemViewClickedListener(this);
         setOnItemViewSelectedListener(this);
         setOnSearchClickedListener(view -> Utils.showToast(getContext(), R.string.notready));
+
     }
 
     private String getStringById(int resourceId) {

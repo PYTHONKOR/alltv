@@ -31,6 +31,7 @@ import android.support.v17.leanback.widget.OnItemViewClickedListener;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
+import android.util.Log;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -105,6 +106,8 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
             return;
         }
 
+        Log.e("createRows", "Oksusu");
+
         CardPresenter presenterSelector = new CardPresenter();
 
         ArrayList<ChannelData> chList = mChannels.containsKey(mType) ? new ArrayList<>(mChannels.get(mType)) : new ArrayList<>();
@@ -128,7 +131,8 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
             mRowsAdapter.add(new ListRow(headerItem, adapter));
         }
 
-        getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
+        if(getMainFragmentAdapter() != null)
+            getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
     }
 
 
@@ -151,6 +155,10 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
                     .header(getStringById(R.string.COOKIE_STR), authKey);
 
             String resultBody = request.body();
+
+
+            Log.e("OksusuFetchVideoUrlTask", resultBody);
+
 
             if (resultBody.contains(getStringById(R.string.CONTENTINFO_STR))) {
                 String jsonStr = resultBody.substring(resultBody.indexOf(getStringById(R.string.CONTENTINFO_STR)) + 14,

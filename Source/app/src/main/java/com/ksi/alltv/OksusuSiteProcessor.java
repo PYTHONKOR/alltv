@@ -92,10 +92,12 @@ public class OksusuSiteProcessor extends SiteProcessor {
 
             String channelName = Utils.removeQuote(channelObj.get(getAppDataString(R.string.CHANNELNAME_TAG)).getAsString());
 
+            chData.setTitle(channelName);
+
             JsonArray programs = channelObj.getAsJsonArray(getAppDataString(R.string.PROGRAMS_TAG));
             String programName = Utils.removeQuote(programs.get(0).getAsJsonObject().get(getAppDataString(R.string.PROGRAMNAME_TAG)).getAsString());
 
-            chData.setTitle(channelName + " - " + programName);
+            chData.setProgram(programName);
 
             String stillImageUrl = Utils.removeQuote(channelObj.get(getAppDataString(R.string.STILLIMAGE_TAG)).getAsString());
 

@@ -31,6 +31,7 @@ import android.support.v17.leanback.widget.OnItemViewClickedListener;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
+import android.util.Log;
 
 import com.google.gson.JsonParser;
 
@@ -91,6 +92,7 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
 
     @Override
     public void createRows() {
+
         mRowsAdapter.clear();
 
         if(isEmptyCategory(mType)) {
@@ -98,6 +100,8 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
             getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
             return;
         }
+
+        Log.e("createRows", "Pooq");
 
         CardPresenter presenterSelector = new CardPresenter();
         ArrayList<ChannelData> chList = mChannels.containsKey(mType) ? new ArrayList<>(mChannels.get(mType)) : new ArrayList<>();
