@@ -66,9 +66,9 @@ public class FetchChannelService extends IntentService {
             String authkey = (String) intent.getSerializableExtra(getResources().getString(R.string.AUTHKEY_STR));
 
             if (authkey == null || authkey.length() == 0)
-                mSiteProcessor.setAuthKey(authkey);
-            else
                 mSiteProcessor.setAuthKey("");
+            else
+                mSiteProcessor.setAuthKey(authkey);
 
             ArrayList<ChannelData> channels = new ArrayList<>();
             ArrayList<CategoryData> category = new ArrayList<>();

@@ -69,6 +69,7 @@
     <string name="TITLENAME_STR">title</string>
     <string name="MODE_STR">mode</string>
     <string name="SITETYPE_STR">sitetype</string>
+    <string name="AUTHKEY_STR">authkey</string>
     <string name="SETTINGS_STR">Settings</string>
     <string name="UNDER19CONTENT_TAG">under19Content</string>
     <string name="OKSUSULOGO_URL">http://image.oksusu.com:8080/thumbnails/image/0_0_F20/live/logo/387/</string>

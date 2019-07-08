@@ -55,7 +55,6 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         createRows();
     }
 
@@ -87,6 +86,10 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
 
     public static void setAuthKey(Utils.SiteType type, String authKey) {
         mAuthKey.put(type, authKey);
+    }
+
+    public static String getAuthKey(Utils.SiteType type) {
+        return mAuthKey.get(type);
     }
 
     protected void setVideoUrlByIndex(Utils.SiteType type, int index, String videoUrl) {

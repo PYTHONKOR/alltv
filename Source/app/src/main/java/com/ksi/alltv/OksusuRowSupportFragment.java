@@ -109,10 +109,6 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
             return;
         }
 
-        if(mAuthKey != null) {
-            String authKey = mAuthKey.get(mType);
-        }
-
         CardPresenter presenterSelector = new CardPresenter();
 
         ArrayList<ChannelData> chList = mChannels.containsKey(mType) ? new ArrayList<>(mChannels.get(mType)) : new ArrayList<>();

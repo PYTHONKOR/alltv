@@ -77,6 +77,7 @@ public class CardPresenter extends Presenter {
         cardView.setFocusable(true);
         cardView.setFocusableInTouchMode(true);
         updateCardBackgroundColor(cardView, false);
+
         return new ViewHolder(cardView);
     }
 

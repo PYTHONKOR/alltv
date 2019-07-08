@@ -137,6 +137,7 @@ public class OksusuSiteProcessor extends SiteProcessor {
             return;
 
         Map<String, String> data = new HashMap<>();
+
         data.put(getAppDataString(R.string.USERID_STR), inSettingsData.mOksusuSettings.mId);
         data.put(getAppDataString(R.string.PASSWORD_STR), inSettingsData.mOksusuSettings.mPassword);
         data.put(getAppDataString(R.string.LOGINMODE_STR), "1");

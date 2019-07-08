@@ -107,7 +107,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
             mSettingsData.mPooqSettings.mId = getStringById(R.string.PooqId);
             mSettingsData.mPooqSettings.mPassword = getStringById(R.string.PooqPwd);
-            mSettingsData.mPooqSettings.mQualityType = SettingsData.PooqQualityType.FHD;
+            mSettingsData.mPooqSettings.mQualityType = SettingsData.PooqQualityType.SD;
 
             OksusuRowSupportFragment.setQualityType(mSettingsData.mOksusuSettings.mQualityType);
             PooqRowSupportFragment.setQualityType(mSettingsData.mPooqSettings.mQualityType);
@@ -154,6 +154,23 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
     }
 
+    public void refreshServiceIntent(Utils.SiteType inSiteType) {
+
+        // Start Service Intent
+        Intent serviceIntent = new Intent(getActivity(), FetchChannelService.class);
+
+        String mySettingsJson = mGson.toJson(mSettingsData);
+        String authkey = AllTvBaseRowsSupportFragment.getAuthKey(inSiteType);
+
+        serviceIntent.putExtra(getStringById(R.string.FETCHCHANNELRESULTRECEIVER_STR), mChannelResultReceiver);
+        serviceIntent.putExtra(getStringById(R.string.SETTINGSDATA_STR), mySettingsJson);
+        serviceIntent.putExtra(getStringById(R.string.SITETYPE_STR), inSiteType);
+        serviceIntent.putExtra(getStringById(R.string.AUTHKEY_STR), authkey);
+
+        getActivity().startService(serviceIntent);
+
+    }
+
     public class PageRowFragmentFactory extends BrowseSupportFragment.FragmentFactory<Fragment> {
 
         @Override
@@ -161,9 +178,13 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
             Row row = (Row) rowObj;
 
             if (row.getHeaderItem().getId() == Utils.Header.Oksusu.ordinal()) {
-                return new OksusuRowSupportFragment();
+                Fragment fragment = new OksusuRowSupportFragment();
+                refreshServiceIntent(Utils.SiteType.Oksusu);
+                return fragment;
             } else if (row.getHeaderItem().getId() == Utils.Header.Pooq.ordinal()) {
-                return new PooqRowSupportFragment();
+                Fragment fragment = new PooqRowSupportFragment();
+                refreshServiceIntent(Utils.SiteType.Pooq);
+                return fragment;
             }
 
             throw new IllegalArgumentException(String.format("Invalid row %s", rowObj));
@@ -255,8 +276,6 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
         } else if (item instanceof ChannelData) {
             //mPicassoBackgroundManager.updateBackgroundWithDelay(((ChannelData) item).getStillImageUrl());
         }
-
-
     }
 
     // GridItemPresenter
@@ -293,10 +312,6 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
                 if (resultData != null) {
                     Utils.SiteType siteType = (Utils.SiteType) resultData.get(getStringById(R.string.SITETYPE_STR));
 
-
-                    Log.e("ServiceIntent_OK", siteType.name());
-
-
                     switch (siteType) {
                         case Oksusu:
                             OksusuRowSupportFragment.setChannelList(resultData.getParcelableArrayList(getStringById(R.string.OKSUSU_CHANNELS_STR)));
@@ -316,7 +331,8 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
                         ((AllTvBaseRowsSupportFragment) fragment).createRows();
                     }
 
-                    getFragmentManager().beginTransaction().remove(mSpinnerFragment[siteType.ordinal()]).commit();
+                    if(mSpinnerFragment[siteType.ordinal()] != null)
+                        getFragmentManager().beginTransaction().remove(mSpinnerFragment[siteType.ordinal()]).commit();
 
                     if (!Hawk.put(getStringById(R.string.SETTINGS_STR), mGson.toJson(mSettingsData))) {
                         Utils.showToast(getContext(), R.string.settingssave_error);

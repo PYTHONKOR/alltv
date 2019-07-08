@@ -58,7 +58,10 @@ public class PooqSiteProcessor extends SiteProcessor {
 
     @Override
     public boolean doProcess(SettingsData inSettingsData) {
-        doLogin(inSettingsData);
+
+        if (mAuthKey == null || mAuthKey.length() == 0)
+            doLogin(inSettingsData);
+
         getLiveTvList();
 
         return true;
