@@ -26,6 +26,7 @@ package com.ksi.alltv;
 
 import com.ksi.alltv.BuildConfig;
 
+import android.app.Instrumentation;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -44,6 +45,8 @@ import android.support.v17.leanback.widget.RowPresenter;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -80,7 +83,6 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
         if (mSettingsData.mPooqSettings.mId != null && mSettingsData.mPooqSettings.mId.length() > 0) {
             startServiceIntent(Utils.SiteType.Pooq);
         }
-
     }
 
     private void initOnCreated() {
@@ -128,19 +130,25 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
         mChannelResultReceiver.setReceiver(this);
     }
 
-    private void startServiceIntent(Utils.SiteType inSiteType) {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+
+    public void startServiceIntent(Utils.SiteType inSiteType) {
 
         mSpinnerFragment[inSiteType.ordinal()] = new SpinnerFragment();
         getFragmentManager().beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment[inSiteType.ordinal()]).commit();
 
         // Start Service Intent
         Intent serviceIntent = new Intent(getActivity(), FetchChannelService.class);
-        serviceIntent.putExtra(getStringById(R.string.FETCHCHANNELRESULTRECEIVER_STR), mChannelResultReceiver);
 
         String mySettingsJson = mGson.toJson(mSettingsData);
-        serviceIntent.putExtra(getStringById(R.string.SETTINGSDATA_STR), mySettingsJson);
 
+        serviceIntent.putExtra(getStringById(R.string.FETCHCHANNELRESULTRECEIVER_STR), mChannelResultReceiver);
+        serviceIntent.putExtra(getStringById(R.string.SETTINGSDATA_STR), mySettingsJson);
         serviceIntent.putExtra(getStringById(R.string.SITETYPE_STR), inSiteType);
+        serviceIntent.putExtra(getStringById(R.string.AUTHKEY_STR), "");
 
         getActivity().startService(serviceIntent);
 
@@ -189,6 +197,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
         GridItemPresenter gridItemPresenter = new GridItemPresenter();
         ArrayObjectAdapter gridRowAdapter = new ArrayObjectAdapter(gridItemPresenter);
+
         gridRowAdapter.add(getStringById(R.string.preferences));
         gridRowAdapter.add(getStringById(R.string.opensource));
         gridRowAdapter.add(getStringById(R.string.version_str) + " " + BuildConfig.VERSION_NAME);
@@ -200,8 +209,19 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
         setOnItemViewClickedListener(this);
         setOnItemViewSelectedListener(this);
-        setOnSearchClickedListener(view -> Utils.showToast(getContext(), R.string.notready));
 
+        setOnSearchClickedListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+//                Utils.showToast(getContext(), R.string.notready);
+                new Thread(new Runnable() {
+                    public void run() {
+                        new Instrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+                    }
+                }).start();
+
+            }
+        });
     }
 
     private String getStringById(int resourceId) {
@@ -214,25 +234,29 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
         if (item instanceof String) {
             if (((String) item).contains(getString(R.string.preferences))) {
+
                 Intent intent = new Intent(getActivity(), SettingsActivity.class);
-
                 intent.putExtra(getStringById(R.string.SETTINGSDATA_STR), mGson.toJson(mSettingsData));
-
                 getActivity().startActivityForResult(intent, Utils.Code.SettingsRequestCode.ordinal());
+
             } else if (((String) item).contains(getString(R.string.opensource))) {
                 showLicensesDialogFragment();
             }
         }
+
     }
 
     @Override
     public void onItemSelected(Presenter.ViewHolder itemViewHolder, Object item,
                                RowPresenter.ViewHolder rowViewHolder, Row row) {
+
         if (item instanceof String) {
             //mPicassoBackgroundManager.updateBackgroundWithDelay("http://blabla/blabla.jpg");
         } else if (item instanceof ChannelData) {
             //mPicassoBackgroundManager.updateBackgroundWithDelay(((ChannelData) item).getStillImageUrl());
         }
+
+
     }
 
     // GridItemPresenter
@@ -268,6 +292,10 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
             case ServiceIntent_OK:
                 if (resultData != null) {
                     Utils.SiteType siteType = (Utils.SiteType) resultData.get(getStringById(R.string.SITETYPE_STR));
+
+
+                    Log.e("ServiceIntent_OK", siteType.name());
+
 
                     switch (siteType) {
                         case Oksusu:

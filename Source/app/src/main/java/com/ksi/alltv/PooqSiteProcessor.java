@@ -64,7 +64,7 @@ public class PooqSiteProcessor extends SiteProcessor {
         return true;
     }
 
-    private void getLiveTvList() {
+    public void getLiveTvList() {
 
         if (mAuthKey == null || mAuthKey.length() == 0)
             return;

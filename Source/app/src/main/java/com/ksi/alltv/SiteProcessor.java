@@ -48,6 +48,9 @@ public abstract class SiteProcessor {
     public final String getAuthKey() {
         return mAuthKey;
     }
+    public final void setAuthKey(String authkey) {
+        mAuthKey = authkey;
+    }
 
     public final String getAppDataString(int resourceId) {
         return mContext.getResources().getString(resourceId);

@@ -24,6 +24,9 @@
 
 package com.ksi.alltv;
 
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.ResultReceiver;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
@@ -46,7 +49,6 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
 
     public OksusuRowSupportFragment() {
         setOnItemViewClickedListener(this);
-
         mType = Utils.SiteType.Oksusu;
     }
 
@@ -63,6 +65,7 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
     }
 
     public static void setQualityType(SettingsData.OksusuQualityType inType) {
+
         if (mQualityType != inType)
             clearAllVideoUrl();
 
@@ -106,7 +109,9 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
             return;
         }
 
-        Log.e("createRows", "Oksusu");
+        if(mAuthKey != null) {
+            String authKey = mAuthKey.get(mType);
+        }
 
         CardPresenter presenterSelector = new CardPresenter();
 
@@ -137,6 +142,7 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
 
 
     private class OksusuFetchVideoUrlTask extends FetchVideoUrlTask {
+
         protected Integer doInBackground(Integer... channelIndex) {
             getFragmentManager().beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment).commit();
 
@@ -155,10 +161,6 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
                     .header(getStringById(R.string.COOKIE_STR), authKey);
 
             String resultBody = request.body();
-
-
-            Log.e("OksusuFetchVideoUrlTask", resultBody);
-
 
             if (resultBody.contains(getStringById(R.string.CONTENTINFO_STR))) {
                 String jsonStr = resultBody.substring(resultBody.indexOf(getStringById(R.string.CONTENTINFO_STR)) + 14,

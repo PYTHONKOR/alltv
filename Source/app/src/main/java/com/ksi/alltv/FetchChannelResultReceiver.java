@@ -27,6 +27,7 @@ package com.ksi.alltv;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.util.Log;
 
 
 public class FetchChannelResultReceiver extends ResultReceiver {

@@ -101,7 +101,9 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
             return;
         }
 
-        Log.e("createRows", "Pooq");
+        if(mAuthKey != null) {
+            String authKey = mAuthKey.get(mType);
+        }
 
         CardPresenter presenterSelector = new CardPresenter();
         ArrayList<ChannelData> chList = mChannels.containsKey(mType) ? new ArrayList<>(mChannels.get(mType)) : new ArrayList<>();
