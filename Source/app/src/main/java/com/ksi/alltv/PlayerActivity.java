@@ -30,6 +30,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -69,6 +70,9 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
     private LinearLayout slidingPanel;
     private TextView textView;
 
+    private Handler mHandler;
+    private Runnable mRunnable;
+
     private boolean isPageOpen=false;
 
     @Override
@@ -102,15 +106,11 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                         }).start();
 
                     } else {
-
                         if(isPageOpen) {
-                            slidingPanel.startAnimation(translateBottomAnim);
-                            slidingPanel.setVisibility(View.GONE);
+                            hideProgramInfo();
                         } else {
-                            slidingPanel.startAnimation(translateTopAnim);
-                            slidingPanel.setVisibility(View.VISIBLE);
+                            showProgramInfo();
                         }
-
                     }
 
                     return false;
@@ -122,7 +122,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         ChannelData item = getIntent().getParcelableExtra(getResources().getString(R.string.PLAYCHANNEL_STR));
 
-        textView.setText(item.getTitle() + " - " + item.getProgram());
+        textView.setText(item.getProgram());
 
         Uri uriLive = Uri.parse(item.getVideoUrl());
 
@@ -142,48 +142,43 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         translateTopAnim.setAnimationListener(new Animation.AnimationListener() {
             @Override
-            public void onAnimationStart(Animation animation) {
-
-            }
-
+            public void onAnimationStart(Animation animation) { }
             @Override
             public void onAnimationEnd(Animation animation) {
-                if(isPageOpen){
+                if(isPageOpen) {
                     slidingPanel.setVisibility(View.INVISIBLE);
                     isPageOpen=false;
-                }else{
+                } else {
                     isPageOpen=true;
                 }
             }
-
             @Override
-            public void onAnimationRepeat(Animation animation) {
-
-            }
-
+            public void onAnimationRepeat(Animation animation) { }
         });
 
         translateBottomAnim.setAnimationListener(new Animation.AnimationListener() {
             @Override
-            public void onAnimationStart(Animation animation) {
-            }
-
+            public void onAnimationStart(Animation animation) { }
             @Override
             public void onAnimationEnd(Animation animation) {
-                if(isPageOpen){
+                if(isPageOpen) {
                     slidingPanel.setVisibility(View.INVISIBLE);
                     isPageOpen=false;
-                }else{
+                } else {
                     isPageOpen=true;
                 }
             }
-
             @Override
-            public void onAnimationRepeat(Animation animation) {
-
-            }
+            public void onAnimationRepeat(Animation animation) { }
         });
 
+        mHandler = new Handler();
+        mRunnable = new Runnable() {
+            @Override
+            public void run() {
+                hideProgramInfo();
+            }
+        };
     }
 
     @Override
@@ -192,11 +187,14 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER)
         {
             if(isPageOpen) {
-                slidingPanel.startAnimation(translateBottomAnim);
-                slidingPanel.setVisibility(View.GONE);
+                hideProgramInfo();
             } else {
-                slidingPanel.startAnimation(translateTopAnim);
-                slidingPanel.setVisibility(View.VISIBLE);
+                showProgramInfo();
+            }
+        } else if(keyCode == KeyEvent.KEYCODE_BACK) {
+            if(isPageOpen) {
+                hideProgramInfo();
+                return false;
             }
         }
 
@@ -207,7 +205,27 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
     public void onDestroy() {
         super.onDestroy();
 
+        hideProgramInfo();
+
         releasePlayer();
+    }
+
+    private void showProgramInfo() {
+        if(isPageOpen) return;
+
+        slidingPanel.startAnimation(translateTopAnim);
+        slidingPanel.setVisibility(View.VISIBLE);
+
+        mHandler.postDelayed(mRunnable, 5000);
+    }
+
+    private void hideProgramInfo() {
+        if(!isPageOpen) return;
+
+        slidingPanel.startAnimation(translateBottomAnim);
+        slidingPanel.setVisibility(View.GONE);
+
+        mHandler.removeCallbacks(mRunnable);
     }
 
     private void releasePlayer() {
