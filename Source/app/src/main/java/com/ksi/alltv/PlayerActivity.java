@@ -189,7 +189,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event)
     {
-        if (keyCode == KeyEvent.KEYCODE_ENTER)
+        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER)
         {
             if(isPageOpen) {
                 slidingPanel.startAnimation(translateBottomAnim);
