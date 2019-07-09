@@ -24,12 +24,17 @@
 
 package com.ksi.alltv;
 
+import android.app.Instrumentation;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.view.View;
 
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -67,13 +72,31 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         mPlayerView.setPlayer(mPlayer);
         mPlayerView.setUseController(false);
 
+        if(BuildConfig.DEBUG) {
+            mPlayerView.setOnTouchListener(new View.OnTouchListener() {
+
+                @Override
+                public boolean onTouch(View view, MotionEvent motionEvent) {
+
+                    new Thread(new Runnable() {
+                        public void run() {
+                            new Instrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+                        }
+                    }).start();
+
+                    return false;
+                }
+            });
+        }
+
         mDataSourceFactory = new DefaultDataSourceFactory(this, Util.getUserAgent(this, getResources().getString(R.string.app_name)));
 
         ChannelData item = getIntent().getParcelableExtra(getResources().getString(R.string.PLAYCHANNEL_STR));
 
         Uri uriLive = Uri.parse(item.getVideoUrl());
 
-        HlsMediaSource mediaSourcelive = new HlsMediaSource.Factory(mDataSourceFactory).setAllowChunklessPreparation(true).createMediaSource(uriLive);
+        HlsMediaSource mediaSourcelive = new HlsMediaSource.Factory(mDataSourceFactory).
+                setAllowChunklessPreparation(true).createMediaSource(uriLive);
 
         if (item.isAudioChannel()) {
             Picasso.get().load(item.getStillImageUrl()).into(this);
@@ -83,6 +106,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         mPlayer.setPlayWhenReady(true);
         mPlayer.addListener(this);
     }
+
 
     @Override
     public void onDestroy() {

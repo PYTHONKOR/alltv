@@ -70,6 +70,8 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
     private SpinnerFragment[] mSpinnerFragment = new SpinnerFragment[Utils.SiteType.values().length];
 
+    private Boolean beStarted = false;
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -99,7 +101,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
             OksusuRowSupportFragment.setQualityType(mSettingsData.mOksusuSettings.mQualityType);
             PooqRowSupportFragment.setQualityType(mSettingsData.mPooqSettings.mQualityType);
 
-        } else {
+        } else if(BuildConfig.DEBUG) {
 
             mSettingsData.mOksusuSettings.mId = getStringById(R.string.OksusuId);
             mSettingsData.mOksusuSettings.mPassword = getStringById(R.string.OksusuPwd);
@@ -111,6 +113,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
             OksusuRowSupportFragment.setQualityType(mSettingsData.mOksusuSettings.mQualityType);
             PooqRowSupportFragment.setQualityType(mSettingsData.mPooqSettings.mQualityType);
+
         }
 
         setupUIElements();
@@ -137,6 +140,8 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
     public void startServiceIntent(Utils.SiteType inSiteType) {
 
+        beStarted = true;
+
         mSpinnerFragment[inSiteType.ordinal()] = new SpinnerFragment();
         getFragmentManager().beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment[inSiteType.ordinal()]).commit();
 
@@ -155,6 +160,14 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
     }
 
     public void refreshServiceIntent(Utils.SiteType inSiteType) {
+
+        if(beStarted) {
+            beStarted = false;
+            return;
+        }
+
+        mSpinnerFragment[inSiteType.ordinal()] = new SpinnerFragment();
+        getFragmentManager().beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment[inSiteType.ordinal()]).commit();
 
         // Start Service Intent
         Intent serviceIntent = new Intent(getActivity(), FetchChannelService.class);
@@ -234,13 +247,15 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
         setOnSearchClickedListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                Utils.showToast(getContext(), R.string.notready);
-                new Thread(new Runnable() {
-                    public void run() {
-                        new Instrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
-                    }
-                }).start();
-
+                if(BuildConfig.DEBUG) {
+                    new Thread(new Runnable() {
+                        public void run() {
+                            new Instrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+                        }
+                    }).start();
+                } else {
+                    Utils.showToast(getContext(), R.string.notready);
+                }
             }
         });
     }
@@ -307,11 +322,14 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
     @Override
     public void onReceiveResult(int resultCode, Bundle resultData) {
 
+        Utils.SiteType siteType = (Utils.SiteType) resultData.get(getStringById(R.string.SITETYPE_STR));
+
+        if(mSpinnerFragment[siteType.ordinal()] != null)
+            getFragmentManager().beginTransaction().remove(mSpinnerFragment[siteType.ordinal()]).commit();
+
         switch (Utils.Code.values()[resultCode]) {
             case ServiceIntent_OK:
                 if (resultData != null) {
-                    Utils.SiteType siteType = (Utils.SiteType) resultData.get(getStringById(R.string.SITETYPE_STR));
-
                     switch (siteType) {
                         case Oksusu:
                             OksusuRowSupportFragment.setChannelList(resultData.getParcelableArrayList(getStringById(R.string.OKSUSU_CHANNELS_STR)));
@@ -331,20 +349,14 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
                         ((AllTvBaseRowsSupportFragment) fragment).createRows();
                     }
 
-                    if(mSpinnerFragment[siteType.ordinal()] != null)
-                        getFragmentManager().beginTransaction().remove(mSpinnerFragment[siteType.ordinal()]).commit();
-
                     if (!Hawk.put(getStringById(R.string.SETTINGS_STR), mGson.toJson(mSettingsData))) {
                         Utils.showToast(getContext(), R.string.settingssave_error);
                         return;
                     }
                 }
                 break;
+
             case ServiceIntent_Fail:
-                Utils.SiteType siteType = (Utils.SiteType) resultData.get(getStringById(R.string.SITETYPE_STR));
-
-                getFragmentManager().beginTransaction().remove(mSpinnerFragment[siteType.ordinal()]).commit();
-
                 switch (siteType) {
                     case Oksusu:
                         Utils.showToast(getContext(), R.string.oksusu_login_fail);

@@ -55,7 +55,7 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        createRows();
+//        createRows();
     }
 
     @Override
