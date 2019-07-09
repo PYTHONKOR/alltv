@@ -38,6 +38,7 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -66,6 +67,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
     private Animation translateTopAnim;
     private Animation translateBottomAnim;
     private LinearLayout slidingPanel;
+    private TextView textView;
 
     private boolean isPageOpen=false;
 
@@ -76,6 +78,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         setContentView(R.layout.activity_videoplayer);
 
         slidingPanel=(LinearLayout)findViewById(R.id.slidingPanel);
+        textView=(TextView)findViewById(R.id.textView);
 
         mPlayerView = findViewById(R.id.video_view);
 
@@ -90,18 +93,24 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                 @Override
                 public boolean onTouch(View view, MotionEvent motionEvent) {
 
-//                    new Thread(new Runnable() {
-//                        public void run() {
-//                            new Instrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
-//                        }
-//                    }).start();
+                    if(motionEvent.getX() < 100. && motionEvent.getY() < 100.) {
 
-                    if(isPageOpen) {
-                        slidingPanel.startAnimation(translateBottomAnim);
-                        slidingPanel.setVisibility(View.GONE);
+                        new Thread(new Runnable() {
+                            public void run() {
+                                new Instrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+                            }
+                        }).start();
+
                     } else {
-                        slidingPanel.startAnimation(translateTopAnim);
-                        slidingPanel.setVisibility(View.VISIBLE);
+
+                        if(isPageOpen) {
+                            slidingPanel.startAnimation(translateBottomAnim);
+                            slidingPanel.setVisibility(View.GONE);
+                        } else {
+                            slidingPanel.startAnimation(translateTopAnim);
+                            slidingPanel.setVisibility(View.VISIBLE);
+                        }
+
                     }
 
                     return false;
@@ -112,6 +121,8 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         mDataSourceFactory = new DefaultDataSourceFactory(this, Util.getUserAgent(this, getResources().getString(R.string.app_name)));
 
         ChannelData item = getIntent().getParcelableExtra(getResources().getString(R.string.PLAYCHANNEL_STR));
+
+        textView.setText(item.getTitle() + " - " + item.getProgram());
 
         Uri uriLive = Uri.parse(item.getVideoUrl());
 
@@ -175,6 +186,22 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event)
+    {
+        if (keyCode == KeyEvent.KEYCODE_ENTER)
+        {
+            if(isPageOpen) {
+                slidingPanel.startAnimation(translateBottomAnim);
+                slidingPanel.setVisibility(View.GONE);
+            } else {
+                slidingPanel.startAnimation(translateTopAnim);
+                slidingPanel.setVisibility(View.VISIBLE);
+            }
+        }
+
+        return super.onKeyDown(keyCode, event);
+    }
 
     @Override
     public void onDestroy() {
