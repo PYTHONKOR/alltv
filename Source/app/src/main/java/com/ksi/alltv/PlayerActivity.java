@@ -35,6 +35,9 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.LinearLayout;
 
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -60,13 +63,22 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
     private SimpleExoPlayer mPlayer;
     private DataSource.Factory mDataSourceFactory;
 
+    private Animation translateTopAnim;
+    private Animation translateBottomAnim;
+    private LinearLayout slidingPanel;
+
+    private boolean isPageOpen=false;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_videoplayer);
 
+        slidingPanel=(LinearLayout)findViewById(R.id.slidingPanel);
+
         mPlayerView = findViewById(R.id.video_view);
+
         mPlayer = ExoPlayerFactory.newSimpleInstance(this, new DefaultTrackSelector());
 
         mPlayerView.setPlayer(mPlayer);
@@ -78,11 +90,19 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                 @Override
                 public boolean onTouch(View view, MotionEvent motionEvent) {
 
-                    new Thread(new Runnable() {
-                        public void run() {
-                            new Instrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
-                        }
-                    }).start();
+//                    new Thread(new Runnable() {
+//                        public void run() {
+//                            new Instrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+//                        }
+//                    }).start();
+
+                    if(isPageOpen) {
+                        slidingPanel.startAnimation(translateBottomAnim);
+                        slidingPanel.setVisibility(View.GONE);
+                    } else {
+                        slidingPanel.startAnimation(translateTopAnim);
+                        slidingPanel.setVisibility(View.VISIBLE);
+                    }
 
                     return false;
                 }
@@ -105,6 +125,54 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         mPlayer.prepare(mediaSourcelive);
         mPlayer.setPlayWhenReady(true);
         mPlayer.addListener(this);
+
+        translateTopAnim =AnimationUtils.loadAnimation(this,R.anim.translate_top);
+        translateBottomAnim =AnimationUtils.loadAnimation(this,R.anim.translate_bottom);
+
+        translateTopAnim.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                if(isPageOpen){
+                    slidingPanel.setVisibility(View.INVISIBLE);
+                    isPageOpen=false;
+                }else{
+                    isPageOpen=true;
+                }
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+
+        });
+
+        translateBottomAnim.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                if(isPageOpen){
+                    slidingPanel.setVisibility(View.INVISIBLE);
+                    isPageOpen=false;
+                }else{
+                    isPageOpen=true;
+                }
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+
     }
 
 

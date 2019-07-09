@@ -131,6 +131,7 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
     }
 
     private class PooqFetchVideoUrlTask extends FetchVideoUrlTask {
+
         protected Integer doInBackground(Integer... channelIndex) {
             getFragmentManager().beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment).commit();
 
@@ -152,6 +153,8 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
                     getStringById(R.string.DEVICEMODEID_STR), getStringById(R.string.PC_STR),
                     getStringById(R.string.AUTHTYPE_STR), getStringById(R.string.URL_STR)).body();
 
+            //Log.e("PooqFetchVideoUrlTask", resultJson);
+
             JsonParser parser = new JsonParser();
 
             String videoUrl = Utils.removeQuote(parser.parse(resultJson).getAsJsonObject().get(getStringById(R.string.RESULT_STR)).getAsJsonObject()
@@ -167,7 +170,6 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
 
             return Utils.Code.FetchVideoUrlTask_OK.ordinal();
         }
-
 
         private String getQualityTag() {
             switch (mQualityType) {
