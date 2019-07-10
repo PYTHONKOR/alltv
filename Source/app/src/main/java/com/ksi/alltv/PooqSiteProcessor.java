@@ -76,7 +76,8 @@ public class PooqSiteProcessor extends SiteProcessor {
                 getAppDataString(R.string.DEVICETYPEID_STR), getAppDataString(R.string.PC_STR),
                 getAppDataString(R.string.MARKETTYPEID_STR), getAppDataString(R.string.GENERIC_STR),
                 getAppDataString(R.string.CREDENTIAL_STR), getAppDataString(R.string.POOQ_API_ACCESSKEY_STR),
-                getAppDataString(R.string.POOQ_CREDENTIAL_STR), mAuthKey).body();
+                getAppDataString(R.string.POOQ_CREDENTIAL_STR), mAuthKey).
+                userAgent(getAppDataString(R.string.USERAGENT)).body();
 
         JsonParser jParser = new JsonParser();
         JsonArray jArray = jParser.parse(resultJson).getAsJsonObject().
@@ -131,7 +132,8 @@ public class PooqSiteProcessor extends SiteProcessor {
                 getAppDataString(R.string.MARKETTYPEID_STR) + "=" + getAppDataString(R.string.GENERIC_STR) + "&" +
                 getAppDataString(R.string.CREDENTIAL_STR) + "=" + getAppDataString(R.string.POOQ_API_ACCESSKEY_STR);
 
-        String resultJson = HttpRequest.post(requestUrl, true).body();
+        String resultJson = HttpRequest.post(requestUrl, true).
+                            userAgent(getAppDataString(R.string.USERAGENT)).body();
 
         JsonParser parser = new JsonParser();
 

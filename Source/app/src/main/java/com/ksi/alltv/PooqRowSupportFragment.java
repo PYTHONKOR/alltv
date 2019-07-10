@@ -151,7 +151,8 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
                     getStringById(R.string.POOQ_CREDENTIAL_STR), authKey,
                     getStringById(R.string.QUALITY_STR), getQualityTag(),
                     getStringById(R.string.DEVICEMODEID_STR), getStringById(R.string.PC_STR),
-                    getStringById(R.string.AUTHTYPE_STR), getStringById(R.string.URL_STR)).body();
+                    getStringById(R.string.AUTHTYPE_STR), getStringById(R.string.URL_STR)).
+                    userAgent(getStringById(R.string.USERAGENT)).body();
 
             //Log.e("PooqFetchVideoUrlTask", resultJson);
 
