@@ -153,12 +153,10 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
             String url = getStringById(R.string.OKSUSUVIDEO_URL) + String.valueOf(chList.get(arrIndex).getId());
 
             HttpRequest request = HttpRequest.get(url)
-                    .userAgent(getStringById(R.string.USERAGENT))
+                    .userAgent("Mozilla/4.0")
                     .header(getStringById(R.string.COOKIE_STR), authKey);
 
             String resultBody = request.body();
-
-            //Log.e("OksusuFetchVideoUrlTask", resultBody);
 
             if (resultBody.contains(getStringById(R.string.CONTENTINFO_STR))) {
                 String jsonStr = resultBody.substring(resultBody.indexOf(getStringById(R.string.CONTENTINFO_STR)) + 14,
@@ -175,11 +173,13 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
                 }
 
                 setVideoUrlByIndex(mType, arrIndex, videoUrl);
+
+                playVideo(chList.get(arrIndex));
+
+                return Utils.Code.FetchVideoUrlTask_OK.ordinal();
             }
 
-            playVideo(chList.get(arrIndex));
-
-            return Utils.Code.FetchVideoUrlTask_OK.ordinal();
+            return Utils.Code.NoVideoUrl_err.ordinal();
         }
 
         private String getQualityTag() {

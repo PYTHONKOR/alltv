@@ -21,6 +21,7 @@
     <string name="SERVICEPROVIDE_STR">serviceProvide</string>
     <string name="ACCESSTOKEN_STR">accessToken</string>
     <string name="CORNAC_STR">CORN_AC=</string>
+    <string name="CORNSESSIONID_STR">CORN_SESSIONID=</string>
     <string name="DOMAIN_STR">; Domain=</string>
     <string name="SETCOOKIE_STR">Set-Cookie</string>
     <string name="FETCHCHANNELRESULTRECEIVER_STR">FetchChannelResultReceiver</string>

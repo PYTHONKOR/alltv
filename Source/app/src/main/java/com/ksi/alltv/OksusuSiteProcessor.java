@@ -76,8 +76,9 @@ public class OksusuSiteProcessor extends SiteProcessor {
         if (mAuthKey == null || mAuthKey.length() == 0)
             return;
 
-        String resultHtml = HttpRequest.get(getAppDataString(R.string.OKSUSU_CHANNEL_URL)).
-                            userAgent(getAppDataString(R.string.USERAGENT)).body();
+        String resultHtml = HttpRequest.get(getAppDataString(R.string.OKSUSU_CHANNEL_URL))
+                            .userAgent(getAppDataString(R.string.USERAGENT))
+                            .body();
 
         JsonParser jParser = new JsonParser();
         JsonArray jArray = jParser.parse(resultHtml).getAsJsonObject().getAsJsonArray(getAppDataString(R.string.CHANNELS_TAG));
@@ -146,9 +147,9 @@ public class OksusuSiteProcessor extends SiteProcessor {
         data.put(getAppDataString(R.string.SERVICEPROVIDE_STR), "");
         data.put(getAppDataString(R.string.ACCESSTOKEN_STR), "");
 
-        HttpRequest postRequest = HttpRequest.post(getAppDataString(R.string.OKSUSU_LOGIN_URL)).
-                                            userAgent(getAppDataString(R.string.USERAGENT)).
-                                            form(data);
+        HttpRequest postRequest = HttpRequest.post(getAppDataString(R.string.OKSUSU_LOGIN_URL))
+                                    .userAgent(getAppDataString(R.string.USERAGENT))
+                                    .form(data);
 
         String receivedCookies = postRequest.header(getAppDataString(R.string.SETCOOKIE_STR));
 

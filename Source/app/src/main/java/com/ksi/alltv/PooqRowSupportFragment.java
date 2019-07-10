@@ -151,15 +151,16 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
                     getStringById(R.string.POOQ_CREDENTIAL_STR), authKey,
                     getStringById(R.string.QUALITY_STR), getQualityTag(),
                     getStringById(R.string.DEVICEMODEID_STR), getStringById(R.string.PC_STR),
-                    getStringById(R.string.AUTHTYPE_STR), getStringById(R.string.URL_STR)).
-                    userAgent(getStringById(R.string.USERAGENT)).body();
-
-            //Log.e("PooqFetchVideoUrlTask", resultJson);
+                    getStringById(R.string.AUTHTYPE_STR), getStringById(R.string.URL_STR))
+                    .userAgent(getStringById(R.string.USERAGENT))
+                    .body();
 
             JsonParser parser = new JsonParser();
 
-            String videoUrl = Utils.removeQuote(parser.parse(resultJson).getAsJsonObject().get(getStringById(R.string.RESULT_STR)).getAsJsonObject()
-                    .get(getStringById(R.string.SIGNEDURL_STR)).getAsString());
+            String videoUrl = Utils.removeQuote(parser.parse(resultJson).getAsJsonObject().get(getStringById(R.string.RESULT_STR))
+                                .getAsJsonObject()
+                                .get(getStringById(R.string.SIGNEDURL_STR))
+                                .getAsString());
 
             if (videoUrl == null || videoUrl.equals(getStringById(R.string.NULL_STR)) || videoUrl.length() == 0) {
                 return Utils.Code.NoVideoUrl_err.ordinal();
