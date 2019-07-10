@@ -156,6 +156,10 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
                     .userAgent("Mozilla/4.0")
                     .header(getStringById(R.string.COOKIE_STR), authKey);
 
+            if( request.isBodyEmpty() ) {
+                return Utils.Code.NoVideoUrl_err.ordinal();
+            }
+
             String resultBody = request.body();
 
             if (resultBody.contains(getStringById(R.string.CONTENTINFO_STR))) {
@@ -174,12 +178,13 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
 
                 setVideoUrlByIndex(mType, arrIndex, videoUrl);
 
-                playVideo(chList.get(arrIndex));
-
-                return Utils.Code.FetchVideoUrlTask_OK.ordinal();
+            } else {
+                return Utils.Code.NoVideoUrl_err.ordinal();
             }
 
-            return Utils.Code.NoVideoUrl_err.ordinal();
+            playVideo(chList.get(arrIndex));
+
+            return Utils.Code.FetchVideoUrlTask_OK.ordinal();
         }
 
         private String getQualityTag() {
