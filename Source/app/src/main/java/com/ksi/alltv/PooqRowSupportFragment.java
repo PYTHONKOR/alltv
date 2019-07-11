@@ -149,11 +149,11 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
 
             int arrIndex = channelIndex[0];
 
-            Calendar calendar = Calendar.getInstance();
-            calendar.add(Calendar.DAY_OF_YEAR, 1);
-
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:00");
             String startTime = sdf.format(new Date());
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DAY_OF_YEAR, 1);
             String endTime = sdf.format(calendar.getTime());
 
             String url = "https://apis.pooq.co.kr/live/epgs/channels/" + chList.get(arrIndex).getId();
