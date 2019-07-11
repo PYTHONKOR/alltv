@@ -163,6 +163,7 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
             String resultBody = request.body();
 
             if (resultBody.contains(getStringById(R.string.CONTENTINFO_STR))) {
+
                 String jsonStr = resultBody.substring(resultBody.indexOf(getStringById(R.string.CONTENTINFO_STR)) + 14,
                         resultBody.indexOf(getStringById(R.string.OKSUSUJSONSUB_STR)));
 
