@@ -30,6 +30,7 @@
     <string name="OKSUSUAUTHKEY_STR">OksusuAuthKey</string>
     <string name="LICENSE_URL">file:///android_asset/open_source_licenses.html</string>
     <string name="PLAYCHANNEL_STR">PlayChannel</string>
+    <string name="PLAYINFO_STR">PlayInfo</string>
     <string name="LICENSESDIALOG_STR">LicensesDialog</string>
     <string name="OKSUSUVIDEO_URL">http://www.oksusu.com/v/</string>
     <string name="COOKIE_STR">cookie</string>

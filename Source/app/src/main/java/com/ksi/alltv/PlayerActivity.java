@@ -53,8 +53,14 @@ import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 
 public class PlayerActivity extends FragmentActivity implements Player.EventListener, Target {
@@ -72,6 +78,9 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
     private Handler mHandler;
     private Runnable mRunnable;
+
+    private JsonArray mInfoArray;
+    private int mInfoIndex;
 
     private boolean isPageOpen=false;
 
@@ -122,7 +131,17 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         ChannelData item = getIntent().getParcelableExtra(getResources().getString(R.string.PLAYCHANNEL_STR));
 
-        textView.setText(item.getProgram());
+        String info = getIntent().getStringExtra(getResources().getString(R.string.PLAYINFO_STR));
+
+        textView.setText("");
+        mInfoArray = null;
+
+        if(info != null && info.length() > 0) {
+            JsonParser jsonParser = new JsonParser();
+            mInfoArray = jsonParser.parse(info).getAsJsonArray();
+        } else {
+            textView.setText(item.getProgram());
+        }
 
         Uri uriLive = Uri.parse(item.getVideoUrl());
 
@@ -196,6 +215,32 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                 hideProgramInfo();
                 return false;
             }
+        } else if(keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+
+            if(isPageOpen && mInfoArray != null) {
+
+                if(mInfoIndex > 0) mInfoIndex -= 1;
+                else               mInfoIndex = 0;
+
+                displayProgramInfo();
+
+                mHandler.removeCallbacks(mRunnable);
+                mHandler.postDelayed(mRunnable, 5000);
+            }
+
+        } else if(keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+
+            if(isPageOpen && mInfoArray != null) {
+
+                if(mInfoIndex < mInfoArray.size()-1) mInfoIndex += 1;
+                else                                 mInfoIndex = mInfoArray.size()-1;
+
+                displayProgramInfo();
+
+                mHandler.removeCallbacks(mRunnable);
+                mHandler.postDelayed(mRunnable, 5000);
+            }
+
         }
 
         return super.onKeyDown(keyCode, event);
@@ -211,7 +256,27 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
     }
 
     private void showProgramInfo() {
+
         if(isPageOpen) return;
+
+        if(mInfoArray != null) {
+            mInfoIndex = 0;
+
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm00");
+            String currentTime = sdf.format(new Date());
+
+            for(int i=0; i<mInfoArray.size()-1; i++) {
+                String stime = mInfoArray.get(i).getAsJsonObject().get("stime").getAsString();
+                String etime = mInfoArray.get(i).getAsJsonObject().get("etime").getAsString();
+
+                if(currentTime.compareTo(etime) <= 0) {
+                    mInfoIndex = i;
+                    break;
+                }
+            }
+
+            displayProgramInfo();
+        }
 
         slidingPanel.startAnimation(translateTopAnim);
         slidingPanel.setVisibility(View.VISIBLE);
@@ -226,6 +291,18 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         slidingPanel.setVisibility(View.GONE);
 
         mHandler.removeCallbacks(mRunnable);
+    }
+
+    private void displayProgramInfo() {
+
+        String stime = mInfoArray.get(mInfoIndex).getAsJsonObject().get("stime").getAsString();
+        String etime = mInfoArray.get(mInfoIndex).getAsJsonObject().get("etime").getAsString();
+        String name = mInfoArray.get(mInfoIndex).getAsJsonObject().get("name").getAsString();
+
+        stime = stime.substring(8, 10) + ":" + stime.substring(10, 12);
+        etime = etime.substring(8, 10) + ":" + etime.substring(10, 12);
+
+        textView.setText(stime + " ~ " + etime + "\n" + name + "\n");
     }
 
     private void releasePlayer() {

@@ -34,6 +34,8 @@ import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
 import android.util.Log;
 
+import com.google.gson.JsonArray;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -130,6 +132,19 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
 
         Intent intent = new Intent(getActivity(), PlayerActivity.class);
         intent.putExtra(getStringById(R.string.PLAYCHANNEL_STR), playChannel);
+
+        getActivity().startActivity(intent);
+    }
+
+    protected void playVideo(ChannelData playChannel, String playInfo) {
+
+        if (PlayerActivity.active) {
+            return;
+        }
+
+        Intent intent = new Intent(getActivity(), PlayerActivity.class);
+        intent.putExtra(getStringById(R.string.PLAYCHANNEL_STR), playChannel);
+        intent.putExtra(getStringById(R.string.PLAYINFO_STR), playInfo);
 
         getActivity().startActivity(intent);
     }
