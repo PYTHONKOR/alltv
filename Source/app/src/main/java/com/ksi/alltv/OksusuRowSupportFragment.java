@@ -182,7 +182,7 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
 
                 for(int i=0; i<array.size(); i++) {
 
-                    String name =  array.get(i).getAsJsonObject().get("programName").getAsString();
+                    String name = array.get(i).getAsJsonObject().get("programName").getAsString();
                     String stime = array.get(i).getAsJsonObject().get("startTimeYMDHIS").getAsString();
                     String etime = array.get(i).getAsJsonObject().get("endTimeYMDHIS").getAsString();
 
@@ -193,9 +193,9 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
                     item.addProperty("etime", etime);
 
                     progArray.add(item);
-
-                    progInfo = progArray.toString();
                 }
+
+                progInfo = progArray.toString();
 
                 if (videoUrl.equals("null") || videoUrl.length() == 0) {
                     return Utils.Code.NoVideoUrl_err.ordinal();

@@ -37,22 +37,37 @@
     <LinearLayout
         android:id="@+id/slidingPanel"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
+        android:layout_height="100sp"
         android:layout_gravity="bottom"
         android:background="#5f000000"
         android:orientation="horizontal"
         android:visibility="gone">
 
         <TextView
-            android:id="@+id/textView"
-            android:layout_width="match_parent"
+            android:id="@+id/infoView"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_marginLeft="30dp"
-            android:gravity="left|center"
+            android:layout_marginStart="30sp"
             android:background="#00000000"
-            android:text="슬라이딩화면"
+            android:gravity="start|center"
             android:textColor="#ffffffff"
-            android:textSize="20dp"/>
+            android:textSize="20sp" />
+
+        <View
+            android:layout_width="0sp"
+            android:layout_height="0sp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/timeView"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="30sp"
+            android:layout_marginTop="10sp"
+            android:background="#00000000"
+            android:gravity="end|top"
+            android:textColor="#ffffffff"
+            android:textSize="20sp" />
 
     </LinearLayout>
 

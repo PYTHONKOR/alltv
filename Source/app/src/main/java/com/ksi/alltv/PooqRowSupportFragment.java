@@ -33,10 +33,16 @@ import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
 import android.util.Log;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 
 
 public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment implements OnItemViewClickedListener {
@@ -143,9 +149,60 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
 
             int arrIndex = channelIndex[0];
 
-            String url = getStringById(R.string.POOQ_CHANNEL_URL) + chList.get(arrIndex).getId() + "/" + getStringById(R.string.URL_STR);
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DAY_OF_YEAR, 1);
+
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:00");
+            String startTime = sdf.format(new Date());
+            String endTime = sdf.format(calendar.getTime());
+
+            String url = "https://apis.pooq.co.kr/live/epgs/channels/" + chList.get(arrIndex).getId();
 
             String resultJson = HttpRequest.get(url, true,
+                    "startdatetime", startTime,
+                    "enddatetime", endTime,
+                    "offset", "0", "limit", "30",
+                    "apikey", getStringById(R.string.POOQ_API_ACCESSKEY_STR),
+                    "credential", "none", "device", "pc",
+                    "partner", "pooq", "pooqzone", "none",
+                    "region", "kor", "targetage", "auto")
+                    .userAgent(getStringById(R.string.USERAGENT))
+                    .body();
+
+            JsonParser jsonParser = new JsonParser();
+            JsonElement jsonElement = jsonParser.parse(resultJson);
+
+            JsonArray array = jsonElement.getAsJsonObject().getAsJsonArray("list");
+
+            JsonArray progArray = new JsonArray();
+            String progInfo = null;
+
+            for(int i=0; i<array.size(); i++) {
+
+                String name = array.get(i).getAsJsonObject().get("title").getAsString();
+                String stime = array.get(i).getAsJsonObject().get("starttime").getAsString();
+                String etime = array.get(i).getAsJsonObject().get("endtime").getAsString();
+
+                stime = stime.substring(0, 4) + stime.substring(5, 7) + stime.substring(8, 10) +
+                        stime.substring(11, 13) + stime.substring(14, 16) + "00";
+
+                etime = etime.substring(0, 4) + etime.substring(5, 7) + etime.substring(8, 10) +
+                        etime.substring(11, 13) + etime.substring(14, 16) + "00";
+
+                JsonObject item = new JsonObject();
+
+                item.addProperty("name", name);
+                item.addProperty("stime", stime);
+                item.addProperty("etime", etime);
+
+                progArray.add(item);
+            }
+
+            progInfo = progArray.toString();
+
+            url = getStringById(R.string.POOQ_CHANNEL_URL) + chList.get(arrIndex).getId() + "/" + getStringById(R.string.URL_STR);
+
+            resultJson = HttpRequest.get(url, true,
                     getStringById(R.string.DEVICETYPEID_STR), getStringById(R.string.PC_STR),
                     getStringById(R.string.MARKETTYPEID_STR), getStringById(R.string.GENERIC_STR),
                     getStringById(R.string.POOQ_CREDENTIAL_STR), authKey,
@@ -168,7 +225,7 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
 
             setVideoUrlByIndex(Utils.SiteType.Pooq, arrIndex, videoUrl);
 
-            playVideo(chList.get(arrIndex));
+            playVideo(chList.get(arrIndex), progInfo);
 
             return Utils.Code.FetchVideoUrlTask_OK.ordinal();
         }

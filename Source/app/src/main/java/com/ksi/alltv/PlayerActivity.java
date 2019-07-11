@@ -74,7 +74,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
     private Animation translateTopAnim;
     private Animation translateBottomAnim;
     private LinearLayout slidingPanel;
-    private TextView textView;
+    private TextView infoView, timeView;
 
     private Handler mHandler;
     private Runnable mRunnable;
@@ -91,7 +91,8 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         setContentView(R.layout.activity_videoplayer);
 
         slidingPanel=(LinearLayout)findViewById(R.id.slidingPanel);
-        textView=(TextView)findViewById(R.id.textView);
+        infoView=(TextView)findViewById(R.id.infoView);
+        timeView=(TextView)findViewById(R.id.timeView);
 
         mPlayerView = findViewById(R.id.video_view);
 
@@ -133,14 +134,14 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         String info = getIntent().getStringExtra(getResources().getString(R.string.PLAYINFO_STR));
 
-        textView.setText("");
+        infoView.setText("");
         mInfoArray = null;
 
         if(info != null && info.length() > 0) {
             JsonParser jsonParser = new JsonParser();
             mInfoArray = jsonParser.parse(info).getAsJsonArray();
         } else {
-            textView.setText(item.getProgram());
+            infoView.setText(item.getProgram());
         }
 
         Uri uriLive = Uri.parse(item.getVideoUrl());
@@ -275,6 +276,11 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                 }
             }
 
+            sdf = new SimpleDateFormat("HH:mm");
+            currentTime = sdf.format(new Date());
+
+            timeView.setText(currentTime);
+
             displayProgramInfo();
         }
 
@@ -285,6 +291,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
     }
 
     private void hideProgramInfo() {
+
         if(!isPageOpen) return;
 
         slidingPanel.startAnimation(translateBottomAnim);
@@ -302,7 +309,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         stime = stime.substring(8, 10) + ":" + stime.substring(10, 12);
         etime = etime.substring(8, 10) + ":" + etime.substring(10, 12);
 
-        textView.setText(stime + " ~ " + etime + "\n" + name + "\n");
+        infoView.setText(stime + " ~ " + etime + "\n" + name + "\n");
     }
 
     private void releasePlayer() {
