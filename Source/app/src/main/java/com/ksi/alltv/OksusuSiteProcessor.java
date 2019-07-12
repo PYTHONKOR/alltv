@@ -70,7 +70,7 @@ public class OksusuSiteProcessor extends SiteProcessor {
         return true;
     }
 
-    public void getLiveTvList() {
+    private void getLiveTvList() {
 
         if (mAuthKey == null || mAuthKey.length() == 0)
             return;
@@ -78,6 +78,9 @@ public class OksusuSiteProcessor extends SiteProcessor {
         String resultHtml = HttpRequest.get(getAppDataString(R.string.OKSUSU_CHANNEL_URL))
                             .userAgent(getAppDataString(R.string.USERAGENT))
                             .body();
+
+        if(resultHtml == null || resultHtml.equals(getAppDataString(R.string.NULL_STR)) || resultHtml.length() == 0)
+            return;
 
         JsonParser jParser = new JsonParser();
         JsonArray jArray = jParser.parse(resultHtml).getAsJsonObject().getAsJsonArray(getAppDataString(R.string.CHANNELS_TAG));
@@ -132,7 +135,7 @@ public class OksusuSiteProcessor extends SiteProcessor {
         }
     }
 
-    public void doLogin(SettingsData inSettingsData) {
+    private void doLogin(SettingsData inSettingsData) {
 
         if (inSettingsData.mOksusuSettings.mId == null || inSettingsData.mOksusuSettings.mPassword == null)
             return;
@@ -149,6 +152,9 @@ public class OksusuSiteProcessor extends SiteProcessor {
         HttpRequest postRequest = HttpRequest.post(getAppDataString(R.string.OKSUSU_LOGIN_URL))
                                     .userAgent(getAppDataString(R.string.USERAGENT))
                                     .form(data);
+
+        if(postRequest == null || postRequest.isBodyEmpty())
+            return;
 
         String receivedCookies = postRequest.header(getAppDataString(R.string.SETCOOKIE_STR));
 

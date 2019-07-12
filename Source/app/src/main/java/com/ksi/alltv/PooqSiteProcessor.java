@@ -66,7 +66,7 @@ public class PooqSiteProcessor extends SiteProcessor {
         return true;
     }
 
-    public void getLiveTvList() {
+    private void getLiveTvList() {
 
         if (mAuthKey == null || mAuthKey.length() == 0)
             return;
@@ -78,6 +78,9 @@ public class PooqSiteProcessor extends SiteProcessor {
                 getAppDataString(R.string.POOQ_CREDENTIAL_STR), mAuthKey)
                 .userAgent(getAppDataString(R.string.USERAGENT))
                 .body();
+
+        if(resultJson == null || resultJson.equals(getAppDataString(R.string.NULL_STR)) || resultJson.length() == 0)
+            return;
 
         JsonParser jParser = new JsonParser();
         JsonArray jArray = jParser.parse(resultJson).getAsJsonObject().
@@ -121,7 +124,7 @@ public class PooqSiteProcessor extends SiteProcessor {
         }
     }
 
-    public void doLogin(SettingsData inSettingsData) {
+    private void doLogin(SettingsData inSettingsData) {
 
         String requestUrl = getAppDataString(R.string.POOQ_LOGIN_URL) + "?" +
                 getAppDataString(R.string.MODE_STR) + "=" + getAppDataString(R.string.ID_STR) + "&" +
@@ -135,6 +138,9 @@ public class PooqSiteProcessor extends SiteProcessor {
         String resultJson = HttpRequest.post(requestUrl, true)
                             .userAgent(getAppDataString(R.string.USERAGENT))
                             .body();
+
+        if(resultJson == null || resultJson.equals(getAppDataString(R.string.NULL_STR)) || resultJson.length() == 0)
+            return;
 
         JsonParser parser = new JsonParser();
 
