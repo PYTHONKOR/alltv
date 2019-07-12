@@ -170,7 +170,7 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
 
             String progInfo = null;
 
-            if(resultJson != null && resultJson.equals(getStringById(R.string.NULL_STR)) && resultJson.length() != 0) {
+            if(resultJson != null && !resultJson.equals(getStringById(R.string.NULL_STR)) && resultJson.length() != 0) {
 
                 JsonParser jsonParser = new JsonParser();
                 JsonElement jsonElement = jsonParser.parse(resultJson);
