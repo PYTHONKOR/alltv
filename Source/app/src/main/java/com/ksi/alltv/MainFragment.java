@@ -24,8 +24,6 @@
 
 package com.ksi.alltv;
 
-import com.ksi.alltv.BuildConfig;
-
 import android.app.Instrumentation;
 import android.content.Intent;
 import android.graphics.Color;
@@ -49,8 +47,6 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
-import android.util.Log;
 
 import com.google.gson.Gson;
 import com.orhanobut.hawk.Hawk;

@@ -24,9 +24,6 @@
 
 package com.ksi.alltv;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.os.ResultReceiver;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
@@ -34,7 +31,7 @@ import android.support.v17.leanback.widget.OnItemViewClickedListener;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
-import android.util.Log;
+
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

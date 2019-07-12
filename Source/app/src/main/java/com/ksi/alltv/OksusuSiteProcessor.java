@@ -25,7 +25,6 @@
 package com.ksi.alltv;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

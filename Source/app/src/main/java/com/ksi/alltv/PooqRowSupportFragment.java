@@ -31,7 +31,6 @@ import android.support.v17.leanback.widget.OnItemViewClickedListener;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
-import android.util.Log;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -169,36 +168,40 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
                     .userAgent(getStringById(R.string.USERAGENT))
                     .body();
 
-            JsonParser jsonParser = new JsonParser();
-            JsonElement jsonElement = jsonParser.parse(resultJson);
-
-            JsonArray array = jsonElement.getAsJsonObject().getAsJsonArray("list");
-
-            JsonArray progArray = new JsonArray();
             String progInfo = null;
 
-            for(int i=0; i<array.size(); i++) {
+            if(resultJson != null && resultJson.equals(getStringById(R.string.NULL_STR)) && resultJson.length() != 0) {
 
-                String name = array.get(i).getAsJsonObject().get("title").getAsString();
-                String stime = array.get(i).getAsJsonObject().get("starttime").getAsString();
-                String etime = array.get(i).getAsJsonObject().get("endtime").getAsString();
+                JsonParser jsonParser = new JsonParser();
+                JsonElement jsonElement = jsonParser.parse(resultJson);
 
-                stime = stime.substring(0, 4) + stime.substring(5, 7) + stime.substring(8, 10) +
-                        stime.substring(11, 13) + stime.substring(14, 16) + "00";
+                JsonArray array = jsonElement.getAsJsonObject().getAsJsonArray("list");
 
-                etime = etime.substring(0, 4) + etime.substring(5, 7) + etime.substring(8, 10) +
-                        etime.substring(11, 13) + etime.substring(14, 16) + "00";
+                JsonArray progArray = new JsonArray();
 
-                JsonObject item = new JsonObject();
+                for(int i=0; i<array.size(); i++) {
 
-                item.addProperty("name", name);
-                item.addProperty("stime", stime);
-                item.addProperty("etime", etime);
+                    String name = array.get(i).getAsJsonObject().get("title").getAsString();
+                    String stime = array.get(i).getAsJsonObject().get("starttime").getAsString();
+                    String etime = array.get(i).getAsJsonObject().get("endtime").getAsString();
 
-                progArray.add(item);
+                    stime = stime.substring(0, 4) + stime.substring(5, 7) + stime.substring(8, 10) +
+                            stime.substring(11, 13) + stime.substring(14, 16) + "00";
+
+                    etime = etime.substring(0, 4) + etime.substring(5, 7) + etime.substring(8, 10) +
+                            etime.substring(11, 13) + etime.substring(14, 16) + "00";
+
+                    JsonObject item = new JsonObject();
+
+                    item.addProperty("name", name);
+                    item.addProperty("stime", stime);
+                    item.addProperty("etime", etime);
+
+                    progArray.add(item);
+                }
+
+                progInfo = progArray.toString();
             }
-
-            progInfo = progArray.toString();
 
             url = getStringById(R.string.POOQ_CHANNEL_URL) + chList.get(arrIndex).getId() + "/" + getStringById(R.string.URL_STR);
 

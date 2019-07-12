@@ -32,9 +32,6 @@ import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
-import android.util.Log;
-
-import com.google.gson.JsonArray;
 
 import java.util.ArrayList;
 import java.util.HashMap;
