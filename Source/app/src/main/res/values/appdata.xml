@@ -1,11 +1,13 @@
 <resources>
-    <string name="USERAGENT">Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.109 Safari/537.36</string>
+    <string name="USERAGENT">Mozilla/5.0 (Linux; Android 4.4.2; sdk Build/KK) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/30.0.0.0 Mobile Safari/537.36</string>
     <string name="OKSUSU_CHANNEL_URL">http://www.oksusu.com/api/live/organization/list?synopsysYn=Y</string>
     <string name="CHANNELS_TAG">channels</string>
     <string name="JSONCATEGORY_TAG">commonGenre</string>
     <string name="AUTOURL_TAG">hlsUrlPhoneAUTO</string>
     <string name="CHANNELNAME_TAG">channelName</string>
     <string name="STILLIMAGE_TAG">stillImageName</string>
+    <string name="PROGRAMS_TAG">programs</string>
+    <string name="PROGRAMNAME_TAG">programName</string>
     <string name="SERVICEID_TAG">serviceId</string>
     <string name="CHANNELCATEGORY_TAG">genreCd</string>
     <string name="CATEGORYNO_TAG">cdNo</string>
@@ -19,6 +21,7 @@
     <string name="SERVICEPROVIDE_STR">serviceProvide</string>
     <string name="ACCESSTOKEN_STR">accessToken</string>
     <string name="CORNAC_STR">CORN_AC=</string>
+    <string name="CORNSESSIONID_STR">CORN_SESSIONID=</string>
     <string name="DOMAIN_STR">; Domain=</string>
     <string name="SETCOOKIE_STR">Set-Cookie</string>
     <string name="FETCHCHANNELRESULTRECEIVER_STR">FetchChannelResultReceiver</string>
@@ -27,6 +30,7 @@
     <string name="OKSUSUAUTHKEY_STR">OksusuAuthKey</string>
     <string name="LICENSE_URL">file:///android_asset/open_source_licenses.html</string>
     <string name="PLAYCHANNEL_STR">PlayChannel</string>
+    <string name="PLAYINFO_STR">PlayInfo</string>
     <string name="LICENSESDIALOG_STR">LicensesDialog</string>
     <string name="OKSUSUVIDEO_URL">http://www.oksusu.com/v/</string>
     <string name="COOKIE_STR">cookie</string>
@@ -64,8 +68,10 @@
     <string name="GENRETITLE_STR">GenreTitle</string>
     <string name="CHANNELTITLE_STR">channelTitle</string>
     <string name="CHANNELIMAGE_STR">channelImage</string>
+    <string name="TITLENAME_STR">title</string>
     <string name="MODE_STR">mode</string>
     <string name="SITETYPE_STR">sitetype</string>
+    <string name="AUTHKEY_STR">authkey</string>
     <string name="SETTINGS_STR">Settings</string>
     <string name="UNDER19CONTENT_TAG">under19Content</string>
     <string name="OKSUSULOGO_URL">http://image.oksusu.com:8080/thumbnails/image/0_0_F20/live/logo/387/</string>

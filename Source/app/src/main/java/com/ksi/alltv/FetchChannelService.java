@@ -45,6 +45,7 @@ public class FetchChannelService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+
         if (intent != null) {
             ResultReceiver channelResultReceiver = intent
                     .getParcelableExtra(getResources().getString(R.string.FETCHCHANNELRESULTRECEIVER_STR));
@@ -60,6 +61,13 @@ public class FetchChannelService extends IntentService {
             } else if (siteType == Utils.SiteType.Pooq) {
                 mSiteProcessor = new PooqSiteProcessor(getApplicationContext());
             }
+
+            String authkey = (String) intent.getSerializableExtra(getResources().getString(R.string.AUTHKEY_STR));
+
+            if (authkey == null || authkey.length() == 0)
+                mSiteProcessor.setAuthKey("");
+            else
+                mSiteProcessor.setAuthKey(authkey);
 
             ArrayList<ChannelData> channels = new ArrayList<>();
             ArrayList<CategoryData> category = new ArrayList<>();
@@ -79,11 +87,13 @@ public class FetchChannelService extends IntentService {
             retBundle.putString(getResources().getString(AuthKeyStrId), mSiteProcessor.getAuthKey());
             retBundle.putSerializable(getResources().getString(R.string.SITETYPE_STR), siteType);
 
+            int retCode;
             String authKey = mSiteProcessor.getAuthKey();
-            int retCode = Utils.Code.ServiceIntent_OK.ordinal();
 
             if(authKey == null || authKey.length() == 0) {
                 retCode = Utils.Code.ServiceIntent_Fail.ordinal();
+            } else {
+                retCode = Utils.Code.ServiceIntent_OK.ordinal();
             }
 
             channelResultReceiver.send(retCode, retBundle);

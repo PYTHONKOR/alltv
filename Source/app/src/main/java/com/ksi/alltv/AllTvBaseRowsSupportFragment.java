@@ -38,6 +38,7 @@ import java.util.HashMap;
 
 
 public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
+
     protected ArrayObjectAdapter mRowsAdapter;
     protected Utils.SiteType mType = Utils.SiteType.None;
 
@@ -53,8 +54,7 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        createRows();
+//        createRows();
     }
 
     @Override
@@ -85,6 +85,10 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
 
     public static void setAuthKey(Utils.SiteType type, String authKey) {
         mAuthKey.put(type, authKey);
+    }
+
+    public static String getAuthKey(Utils.SiteType type) {
+        return mAuthKey.get(type);
     }
 
     protected void setVideoUrlByIndex(Utils.SiteType type, int index, String videoUrl) {
@@ -125,10 +129,25 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
 
         Intent intent = new Intent(getActivity(), PlayerActivity.class);
         intent.putExtra(getStringById(R.string.PLAYCHANNEL_STR), playChannel);
+
+        getActivity().startActivity(intent);
+    }
+
+    protected void playVideo(ChannelData playChannel, String playInfo) {
+
+        if (PlayerActivity.active) {
+            return;
+        }
+
+        Intent intent = new Intent(getActivity(), PlayerActivity.class);
+        intent.putExtra(getStringById(R.string.PLAYCHANNEL_STR), playChannel);
+        intent.putExtra(getStringById(R.string.PLAYINFO_STR), playInfo);
+
         getActivity().startActivity(intent);
     }
 
     protected class FetchVideoUrlTask extends AsyncTask<Integer, Integer, Integer> {
+
         SpinnerFragment mSpinnerFragment = new SpinnerFragment();
 
         protected Integer doInBackground(Integer... channelIndex) {
@@ -140,6 +159,7 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
         }
 
         protected void onPostExecute(Integer result) {
+
             getFragmentManager().beginTransaction().remove(mSpinnerFragment).commit();
 
             switch (Utils.Code.values()[result]) {
@@ -152,4 +172,9 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
             }
         }
     }
+
+
+
+
 }
+

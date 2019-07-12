@@ -57,7 +57,10 @@ public class PooqSiteProcessor extends SiteProcessor {
 
     @Override
     public boolean doProcess(SettingsData inSettingsData) {
-        doLogin(inSettingsData);
+
+        if (mAuthKey == null || mAuthKey.length() == 0)
+            doLogin(inSettingsData);
+
         getLiveTvList();
 
         return true;
@@ -72,11 +75,19 @@ public class PooqSiteProcessor extends SiteProcessor {
                 getAppDataString(R.string.DEVICETYPEID_STR), getAppDataString(R.string.PC_STR),
                 getAppDataString(R.string.MARKETTYPEID_STR), getAppDataString(R.string.GENERIC_STR),
                 getAppDataString(R.string.CREDENTIAL_STR), getAppDataString(R.string.POOQ_API_ACCESSKEY_STR),
-                getAppDataString(R.string.POOQ_CREDENTIAL_STR), mAuthKey).body();
+                getAppDataString(R.string.POOQ_CREDENTIAL_STR), mAuthKey)
+                .userAgent(getAppDataString(R.string.USERAGENT))
+                .body();
+
+        if(resultJson == null || resultJson.equals(getAppDataString(R.string.NULL_STR)) || resultJson.length() == 0)
+            return;
 
         JsonParser jParser = new JsonParser();
         JsonArray jArray = jParser.parse(resultJson).getAsJsonObject().
                 get(getAppDataString(R.string.RESULT_STR)).getAsJsonObject().getAsJsonArray(getAppDataString(R.string.LIST_STR));
+
+        mChannelDatas.clear();
+        mCategoryDatas.clear();
 
         for (JsonElement arr : jArray) {
             JsonObject categoryObj = arr.getAsJsonObject();
@@ -96,7 +107,12 @@ public class PooqSiteProcessor extends SiteProcessor {
                 JsonObject chObj = chEle.getAsJsonObject();
 
                 ChannelData chData = new ChannelData();
-                chData.setTitle(Utils.removeQuote(chObj.get(getAppDataString(R.string.CHANNELTITLE_STR)).getAsString()));
+
+                String channelName = Utils.removeQuote(chObj.get(getAppDataString(R.string.CHANNELTITLE_STR)).getAsString());
+                String programName = Utils.removeQuote(chObj.get(getAppDataString(R.string.TITLENAME_STR)).getAsString());
+
+                chData.setTitle(channelName);
+                chData.setProgram(programName);
                 chData.setStillImageUrl(Utils.removeQuote(chObj.get(getAppDataString(R.string.CHANNELIMAGE_STR)).getAsString()));
                 chData.setId(Utils.removeQuote(chObj.get(getAppDataString(R.string.ID_STR)).getAsString()));
                 chData.setCategoryId(categoryId);
@@ -108,7 +124,7 @@ public class PooqSiteProcessor extends SiteProcessor {
         }
     }
 
-    public void doLogin(SettingsData inSettingsData) {
+    private void doLogin(SettingsData inSettingsData) {
 
         String requestUrl = getAppDataString(R.string.POOQ_LOGIN_URL) + "?" +
                 getAppDataString(R.string.MODE_STR) + "=" + getAppDataString(R.string.ID_STR) + "&" +
@@ -119,7 +135,12 @@ public class PooqSiteProcessor extends SiteProcessor {
                 getAppDataString(R.string.MARKETTYPEID_STR) + "=" + getAppDataString(R.string.GENERIC_STR) + "&" +
                 getAppDataString(R.string.CREDENTIAL_STR) + "=" + getAppDataString(R.string.POOQ_API_ACCESSKEY_STR);
 
-        String resultJson = HttpRequest.post(requestUrl, true).body();
+        String resultJson = HttpRequest.post(requestUrl, true)
+                            .userAgent(getAppDataString(R.string.USERAGENT))
+                            .body();
+
+        if(resultJson == null || resultJson.equals(getAppDataString(R.string.NULL_STR)) || resultJson.length() == 0)
+            return;
 
         JsonParser parser = new JsonParser();
 

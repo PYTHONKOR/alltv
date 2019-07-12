@@ -24,8 +24,7 @@
 
 package com.ksi.alltv;
 
-import com.ksi.alltv.BuildConfig;
-
+import android.app.Instrumentation;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -44,6 +43,8 @@ import android.support.v17.leanback.widget.RowPresenter;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
@@ -65,6 +66,8 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
     private SpinnerFragment[] mSpinnerFragment = new SpinnerFragment[Utils.SiteType.values().length];
 
+    private Boolean beStarted = false;
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -81,6 +84,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
     }
 
     private void initOnCreated() {
+
         Hawk.init(getContext())
                 //.setEncryptionMethod(HawkBuilder.EncryptionMethod.HIGHEST)
                 .build();
@@ -92,6 +96,20 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
             OksusuRowSupportFragment.setQualityType(mSettingsData.mOksusuSettings.mQualityType);
             PooqRowSupportFragment.setQualityType(mSettingsData.mPooqSettings.mQualityType);
+
+        } else if(BuildConfig.DEBUG) {
+
+            mSettingsData.mOksusuSettings.mId = getStringById(R.string.OksusuId);
+            mSettingsData.mOksusuSettings.mPassword = getStringById(R.string.OksusuPwd);
+            mSettingsData.mOksusuSettings.mQualityType = SettingsData.OksusuQualityType.FullHD;
+
+            mSettingsData.mPooqSettings.mId = getStringById(R.string.PooqId);
+            mSettingsData.mPooqSettings.mPassword = getStringById(R.string.PooqPwd);
+            mSettingsData.mPooqSettings.mQualityType = SettingsData.PooqQualityType.SD;
+
+            OksusuRowSupportFragment.setQualityType(mSettingsData.mOksusuSettings.mQualityType);
+            PooqRowSupportFragment.setQualityType(mSettingsData.mPooqSettings.mQualityType);
+
         }
 
         setupUIElements();
@@ -111,20 +129,55 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
         mChannelResultReceiver.setReceiver(this);
     }
 
-    private void startServiceIntent(Utils.SiteType inSiteType) {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+
+    public void startServiceIntent(Utils.SiteType inSiteType) {
+
+        beStarted = true;
+
         mSpinnerFragment[inSiteType.ordinal()] = new SpinnerFragment();
         getFragmentManager().beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment[inSiteType.ordinal()]).commit();
 
         // Start Service Intent
         Intent serviceIntent = new Intent(getActivity(), FetchChannelService.class);
-        serviceIntent.putExtra(getStringById(R.string.FETCHCHANNELRESULTRECEIVER_STR), mChannelResultReceiver);
 
         String mySettingsJson = mGson.toJson(mSettingsData);
-        serviceIntent.putExtra(getStringById(R.string.SETTINGSDATA_STR), mySettingsJson);
 
+        serviceIntent.putExtra(getStringById(R.string.FETCHCHANNELRESULTRECEIVER_STR), mChannelResultReceiver);
+        serviceIntent.putExtra(getStringById(R.string.SETTINGSDATA_STR), mySettingsJson);
         serviceIntent.putExtra(getStringById(R.string.SITETYPE_STR), inSiteType);
+        serviceIntent.putExtra(getStringById(R.string.AUTHKEY_STR), "");
 
         getActivity().startService(serviceIntent);
+
+    }
+
+    public void refreshServiceIntent(Utils.SiteType inSiteType) {
+
+        if(beStarted) {
+            beStarted = false;
+            return;
+        }
+
+        mSpinnerFragment[inSiteType.ordinal()] = new SpinnerFragment();
+        getFragmentManager().beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment[inSiteType.ordinal()]).commit();
+
+        // Start Service Intent
+        Intent serviceIntent = new Intent(getActivity(), FetchChannelService.class);
+
+        String mySettingsJson = mGson.toJson(mSettingsData);
+        String authkey = AllTvBaseRowsSupportFragment.getAuthKey(inSiteType);
+
+        serviceIntent.putExtra(getStringById(R.string.FETCHCHANNELRESULTRECEIVER_STR), mChannelResultReceiver);
+        serviceIntent.putExtra(getStringById(R.string.SETTINGSDATA_STR), mySettingsJson);
+        serviceIntent.putExtra(getStringById(R.string.SITETYPE_STR), inSiteType);
+        serviceIntent.putExtra(getStringById(R.string.AUTHKEY_STR), authkey);
+
+        getActivity().startService(serviceIntent);
+
     }
 
     public class PageRowFragmentFactory extends BrowseSupportFragment.FragmentFactory<Fragment> {
@@ -134,9 +187,13 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
             Row row = (Row) rowObj;
 
             if (row.getHeaderItem().getId() == Utils.Header.Oksusu.ordinal()) {
-                return new OksusuRowSupportFragment();
+                Fragment fragment = new OksusuRowSupportFragment();
+                refreshServiceIntent(Utils.SiteType.Oksusu);
+                return fragment;
             } else if (row.getHeaderItem().getId() == Utils.Header.Pooq.ordinal()) {
-                return new PooqRowSupportFragment();
+                Fragment fragment = new PooqRowSupportFragment();
+                refreshServiceIntent(Utils.SiteType.Pooq);
+                return fragment;
             }
 
             throw new IllegalArgumentException(String.format("Invalid row %s", rowObj));
@@ -170,6 +227,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
         GridItemPresenter gridItemPresenter = new GridItemPresenter();
         ArrayObjectAdapter gridRowAdapter = new ArrayObjectAdapter(gridItemPresenter);
+
         gridRowAdapter.add(getStringById(R.string.preferences));
         gridRowAdapter.add(getStringById(R.string.opensource));
         gridRowAdapter.add(getStringById(R.string.version_str) + " " + BuildConfig.VERSION_NAME);
@@ -178,9 +236,24 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
     }
 
     private void setupEventListeners() {
+
         setOnItemViewClickedListener(this);
         setOnItemViewSelectedListener(this);
-        setOnSearchClickedListener(view -> Utils.showToast(getContext(), R.string.notready));
+
+        setOnSearchClickedListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(BuildConfig.DEBUG) {
+                    new Thread(new Runnable() {
+                        public void run() {
+                            new Instrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+                        }
+                    }).start();
+                } else {
+                    Utils.showToast(getContext(), R.string.notready);
+                }
+            }
+        });
     }
 
     private String getStringById(int resourceId) {
@@ -193,20 +266,22 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
         if (item instanceof String) {
             if (((String) item).contains(getString(R.string.preferences))) {
+
                 Intent intent = new Intent(getActivity(), SettingsActivity.class);
-
                 intent.putExtra(getStringById(R.string.SETTINGSDATA_STR), mGson.toJson(mSettingsData));
-
                 getActivity().startActivityForResult(intent, Utils.Code.SettingsRequestCode.ordinal());
+
             } else if (((String) item).contains(getString(R.string.opensource))) {
                 showLicensesDialogFragment();
             }
         }
+
     }
 
     @Override
     public void onItemSelected(Presenter.ViewHolder itemViewHolder, Object item,
                                RowPresenter.ViewHolder rowViewHolder, Row row) {
+
         if (item instanceof String) {
             //mPicassoBackgroundManager.updateBackgroundWithDelay("http://blabla/blabla.jpg");
         } else if (item instanceof ChannelData) {
@@ -243,11 +318,14 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
     @Override
     public void onReceiveResult(int resultCode, Bundle resultData) {
 
+        Utils.SiteType siteType = (Utils.SiteType) resultData.get(getStringById(R.string.SITETYPE_STR));
+
+        if(mSpinnerFragment[siteType.ordinal()] != null)
+            getFragmentManager().beginTransaction().remove(mSpinnerFragment[siteType.ordinal()]).commit();
+
         switch (Utils.Code.values()[resultCode]) {
             case ServiceIntent_OK:
                 if (resultData != null) {
-                    Utils.SiteType siteType = (Utils.SiteType) resultData.get(getStringById(R.string.SITETYPE_STR));
-
                     switch (siteType) {
                         case Oksusu:
                             OksusuRowSupportFragment.setChannelList(resultData.getParcelableArrayList(getStringById(R.string.OKSUSU_CHANNELS_STR)));
@@ -267,19 +345,14 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
                         ((AllTvBaseRowsSupportFragment) fragment).createRows();
                     }
 
-                    getFragmentManager().beginTransaction().remove(mSpinnerFragment[siteType.ordinal()]).commit();
-
                     if (!Hawk.put(getStringById(R.string.SETTINGS_STR), mGson.toJson(mSettingsData))) {
                         Utils.showToast(getContext(), R.string.settingssave_error);
                         return;
                     }
                 }
                 break;
+
             case ServiceIntent_Fail:
-                Utils.SiteType siteType = (Utils.SiteType) resultData.get(getStringById(R.string.SITETYPE_STR));
-
-                getFragmentManager().beginTransaction().remove(mSpinnerFragment[siteType.ordinal()]).commit();
-
                 switch (siteType) {
                     case Oksusu:
                         Utils.showToast(getContext(), R.string.oksusu_login_fail);

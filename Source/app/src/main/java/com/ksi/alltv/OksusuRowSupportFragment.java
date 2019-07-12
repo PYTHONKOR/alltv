@@ -32,7 +32,10 @@ import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
 
+
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.util.ArrayList;
@@ -45,7 +48,6 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
 
     public OksusuRowSupportFragment() {
         setOnItemViewClickedListener(this);
-
         mType = Utils.SiteType.Oksusu;
     }
 
@@ -62,6 +64,7 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
     }
 
     public static void setQualityType(SettingsData.OksusuQualityType inType) {
+
         if (mQualityType != inType)
             clearAllVideoUrl();
 
@@ -128,11 +131,13 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
             mRowsAdapter.add(new ListRow(headerItem, adapter));
         }
 
-        getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
+        if(getMainFragmentAdapter() != null)
+            getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
     }
 
 
     private class OksusuFetchVideoUrlTask extends FetchVideoUrlTask {
+
         protected Integer doInBackground(Integer... channelIndex) {
             getFragmentManager().beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment).commit();
 
@@ -147,12 +152,18 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
             String url = getStringById(R.string.OKSUSUVIDEO_URL) + String.valueOf(chList.get(arrIndex).getId());
 
             HttpRequest request = HttpRequest.get(url)
-                    .userAgent(getStringById(R.string.USERAGENT))
+                    .userAgent("Mozilla/4.0")
                     .header(getStringById(R.string.COOKIE_STR), authKey);
 
+            if( request.isBodyEmpty() ) {
+                return Utils.Code.NoVideoUrl_err.ordinal();
+            }
+
             String resultBody = request.body();
+            String progInfo = null;
 
             if (resultBody.contains(getStringById(R.string.CONTENTINFO_STR))) {
+
                 String jsonStr = resultBody.substring(resultBody.indexOf(getStringById(R.string.CONTENTINFO_STR)) + 14,
                         resultBody.indexOf(getStringById(R.string.OKSUSUJSONSUB_STR)));
 
@@ -162,14 +173,38 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
                 String videoUrl = Utils.removeQuote(jsonElement.getAsJsonObject().get(getStringById(R.string.STREAMURL_STR))
                         .getAsJsonObject().get(getQualityTag()).toString());
 
+                JsonArray array = jsonElement.getAsJsonObject().get("channel").getAsJsonObject().getAsJsonArray("another_programs");
+
+                JsonArray progArray = new JsonArray();
+
+                for(int i=0; i<array.size(); i++) {
+
+                    String name = array.get(i).getAsJsonObject().get("programName").getAsString();
+                    String stime = array.get(i).getAsJsonObject().get("startTimeYMDHIS").getAsString();
+                    String etime = array.get(i).getAsJsonObject().get("endTimeYMDHIS").getAsString();
+
+                    JsonObject item = new JsonObject();
+
+                    item.addProperty("name", name);
+                    item.addProperty("stime", stime);
+                    item.addProperty("etime", etime);
+
+                    progArray.add(item);
+                }
+
+                progInfo = progArray.toString();
+
                 if (videoUrl.equals("null") || videoUrl.length() == 0) {
                     return Utils.Code.NoVideoUrl_err.ordinal();
                 }
 
                 setVideoUrlByIndex(mType, arrIndex, videoUrl);
+
+            } else {
+                return Utils.Code.NoVideoUrl_err.ordinal();
             }
 
-            playVideo(chList.get(arrIndex));
+            playVideo(chList.get(arrIndex), progInfo);
 
             return Utils.Code.FetchVideoUrlTask_OK.ordinal();
         }

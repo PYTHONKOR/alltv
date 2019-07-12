@@ -13,15 +13,62 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:keepScreenOn="true">
 
-    <com.google.android.exoplayer2.ui.PlayerView
-        android:id="@+id/video_view"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="center" />
+        android:background="#00000000"
+        android:orientation="vertical">
 
-</RelativeLayout>
+        <com.google.android.exoplayer2.ui.PlayerView
+            android:id="@+id/video_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/slidingPanel"
+        android:layout_width="match_parent"
+        android:layout_height="100sp"
+        android:layout_gravity="bottom"
+        android:background="#5f000000"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/infoView"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginStart="30sp"
+            android:background="#00000000"
+            android:gravity="start|center"
+            android:textColor="#ffffffff"
+            android:textSize="20sp" />
+
+        <View
+            android:layout_width="0sp"
+            android:layout_height="0sp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/timeView"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="30sp"
+            android:layout_marginTop="10sp"
+            android:background="#00000000"
+            android:gravity="end|top"
+            android:textColor="#ffffffff"
+            android:textSize="20sp" />
+
+    </LinearLayout>
+
+</FrameLayout>

@@ -61,7 +61,10 @@ public class OksusuSiteProcessor extends SiteProcessor {
 
     @Override
     public boolean doProcess(SettingsData inSettingsData) {
-        doLogin(inSettingsData);
+
+        if (mAuthKey == null || mAuthKey.length() == 0)
+            doLogin(inSettingsData);
+
         getLiveTvList();
 
         return true;
@@ -72,10 +75,18 @@ public class OksusuSiteProcessor extends SiteProcessor {
         if (mAuthKey == null || mAuthKey.length() == 0)
             return;
 
-        String resultHtml = HttpRequest.get(getAppDataString(R.string.OKSUSU_CHANNEL_URL)).body();
+        String resultHtml = HttpRequest.get(getAppDataString(R.string.OKSUSU_CHANNEL_URL))
+                            .userAgent(getAppDataString(R.string.USERAGENT))
+                            .body();
+
+        if(resultHtml == null || resultHtml.equals(getAppDataString(R.string.NULL_STR)) || resultHtml.length() == 0)
+            return;
 
         JsonParser jParser = new JsonParser();
         JsonArray jArray = jParser.parse(resultHtml).getAsJsonObject().getAsJsonArray(getAppDataString(R.string.CHANNELS_TAG));
+
+        mChannelDatas.clear();
+        mCategoryDatas.clear();
 
         // Channels
         for (JsonElement arr : jArray) {
@@ -85,7 +96,15 @@ public class OksusuSiteProcessor extends SiteProcessor {
                 continue;
 
             ChannelData chData = new ChannelData();
-            chData.setTitle(Utils.removeQuote(channelObj.get(getAppDataString(R.string.CHANNELNAME_TAG)).getAsString()));
+
+            String channelName = Utils.removeQuote(channelObj.get(getAppDataString(R.string.CHANNELNAME_TAG)).getAsString());
+
+            chData.setTitle(channelName);
+
+            JsonArray programs = channelObj.getAsJsonArray(getAppDataString(R.string.PROGRAMS_TAG));
+            String programName = Utils.removeQuote(programs.get(0).getAsJsonObject().get(getAppDataString(R.string.PROGRAMNAME_TAG)).getAsString());
+
+            chData.setProgram(programName);
 
             String stillImageUrl = Utils.removeQuote(channelObj.get(getAppDataString(R.string.STILLIMAGE_TAG)).getAsString());
 
@@ -116,12 +135,13 @@ public class OksusuSiteProcessor extends SiteProcessor {
         }
     }
 
-    public void doLogin(SettingsData inSettingsData) {
+    private void doLogin(SettingsData inSettingsData) {
 
         if (inSettingsData.mOksusuSettings.mId == null || inSettingsData.mOksusuSettings.mPassword == null)
             return;
 
         Map<String, String> data = new HashMap<>();
+
         data.put(getAppDataString(R.string.USERID_STR), inSettingsData.mOksusuSettings.mId);
         data.put(getAppDataString(R.string.PASSWORD_STR), inSettingsData.mOksusuSettings.mPassword);
         data.put(getAppDataString(R.string.LOGINMODE_STR), "1");
@@ -129,7 +149,12 @@ public class OksusuSiteProcessor extends SiteProcessor {
         data.put(getAppDataString(R.string.SERVICEPROVIDE_STR), "");
         data.put(getAppDataString(R.string.ACCESSTOKEN_STR), "");
 
-        HttpRequest postRequest = HttpRequest.post(getAppDataString(R.string.OKSUSU_LOGIN_URL)).form(data);
+        HttpRequest postRequest = HttpRequest.post(getAppDataString(R.string.OKSUSU_LOGIN_URL))
+                                    .userAgent(getAppDataString(R.string.USERAGENT))
+                                    .form(data);
+
+        if(postRequest == null || postRequest.isBodyEmpty())
+            return;
 
         String receivedCookies = postRequest.header(getAppDataString(R.string.SETCOOKIE_STR));
 
