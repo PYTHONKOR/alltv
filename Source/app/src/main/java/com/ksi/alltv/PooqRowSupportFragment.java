@@ -138,99 +138,106 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
     private class PooqFetchVideoUrlTask extends FetchVideoUrlTask {
 
         protected Integer doInBackground(Integer... channelIndex) {
-            getFragmentManager().beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment).commit();
 
-            String authKey = mAuthKey.get(mType);
-            ArrayList<ChannelData> chList = mChannels.get(mType);
+            try {
+                getFragmentManager().beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment).commit();
 
-            if (authKey == null || authKey.length() < 10)
-                return Utils.Code.NoAuthKey_err.ordinal();
+                String authKey = mAuthKey.get(mType);
+                ArrayList<ChannelData> chList = mChannels.get(mType);
 
-            int arrIndex = channelIndex[0];
+                if (authKey == null || authKey.length() < 10)
+                    return Utils.Code.NoAuthKey_err.ordinal();
 
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:00");
-            String startTime = sdf.format(new Date());
+                int arrIndex = channelIndex[0];
 
-            Calendar calendar = Calendar.getInstance();
-            calendar.add(Calendar.DAY_OF_YEAR, 1);
-            String endTime = sdf.format(calendar.getTime());
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:00");
+                String startTime = sdf.format(new Date());
 
-            String url = "https://apis.pooq.co.kr/live/epgs/channels/" + chList.get(arrIndex).getId();
+                Calendar calendar = Calendar.getInstance();
+                calendar.add(Calendar.DAY_OF_YEAR, 1);
+                String endTime = sdf.format(calendar.getTime());
 
-            String resultJson = HttpRequest.get(url, true,
-                    "startdatetime", startTime,
-                    "enddatetime", endTime,
-                    "offset", "0", "limit", "30",
-                    "apikey", getStringById(R.string.POOQ_API_ACCESSKEY_STR),
-                    "credential", "none", "device", "pc",
-                    "partner", "pooq", "pooqzone", "none",
-                    "region", "kor", "targetage", "auto")
-                    .userAgent(getStringById(R.string.USERAGENT))
-                    .body();
+                String url = "https://apis.pooq.co.kr/live/epgs/channels/" + chList.get(arrIndex).getId();
 
-            String progInfo = null;
+                String resultJson = HttpRequest.get(url, true,
+                        "startdatetime", startTime,
+                        "enddatetime", endTime,
+                        "offset", "0", "limit", "30",
+                        "apikey", getStringById(R.string.POOQ_API_ACCESSKEY_STR),
+                        "credential", "none", "device", "pc",
+                        "partner", "pooq", "pooqzone", "none",
+                        "region", "kor", "targetage", "auto")
+                        .userAgent(getStringById(R.string.USERAGENT))
+                        .body();
 
-            if (resultJson != null && !resultJson.equals(getStringById(R.string.NULL_STR)) && resultJson.length() != 0) {
+                String progInfo = null;
 
-                JsonParser jsonParser = new JsonParser();
-                JsonElement jsonElement = jsonParser.parse(resultJson);
+                if (resultJson != null && !resultJson.equals(getStringById(R.string.NULL_STR)) && resultJson.length() != 0) {
 
-                JsonArray array = jsonElement.getAsJsonObject().getAsJsonArray("list");
+                    JsonParser jsonParser = new JsonParser();
+                    JsonElement jsonElement = jsonParser.parse(resultJson);
 
-                JsonArray progArray = new JsonArray();
+                    JsonArray array = jsonElement.getAsJsonObject().getAsJsonArray("list");
 
-                for (int i = 0; i < array.size(); i++) {
+                    JsonArray progArray = new JsonArray();
 
-                    String name = array.get(i).getAsJsonObject().get("title").getAsString();
-                    String stime = array.get(i).getAsJsonObject().get("starttime").getAsString();
-                    String etime = array.get(i).getAsJsonObject().get("endtime").getAsString();
+                    for (int i = 0; i < array.size(); i++) {
 
-                    stime = stime.substring(0, 4) + stime.substring(5, 7) + stime.substring(8, 10) +
-                            stime.substring(11, 13) + stime.substring(14, 16) + "00";
+                        String name = array.get(i).getAsJsonObject().get("title").getAsString();
+                        String stime = array.get(i).getAsJsonObject().get("starttime").getAsString();
+                        String etime = array.get(i).getAsJsonObject().get("endtime").getAsString();
 
-                    etime = etime.substring(0, 4) + etime.substring(5, 7) + etime.substring(8, 10) +
-                            etime.substring(11, 13) + etime.substring(14, 16) + "00";
+                        stime = stime.substring(0, 4) + stime.substring(5, 7) + stime.substring(8, 10) +
+                                stime.substring(11, 13) + stime.substring(14, 16) + "00";
 
-                    JsonObject item = new JsonObject();
+                        etime = etime.substring(0, 4) + etime.substring(5, 7) + etime.substring(8, 10) +
+                                etime.substring(11, 13) + etime.substring(14, 16) + "00";
 
-                    item.addProperty("name", name);
-                    item.addProperty("stime", stime);
-                    item.addProperty("etime", etime);
+                        JsonObject item = new JsonObject();
 
-                    progArray.add(item);
+                        item.addProperty("name", name);
+                        item.addProperty("stime", stime);
+                        item.addProperty("etime", etime);
+
+                        progArray.add(item);
+                    }
+
+                    progInfo = progArray.toString();
                 }
 
-                progInfo = progArray.toString();
-            }
+                url = getStringById(R.string.POOQ_CHANNEL_URL) + chList.get(arrIndex).getId() + "/" + getStringById(R.string.URL_STR);
 
-            url = getStringById(R.string.POOQ_CHANNEL_URL) + chList.get(arrIndex).getId() + "/" + getStringById(R.string.URL_STR);
+                resultJson = HttpRequest.get(url, true,
+                        getStringById(R.string.DEVICETYPEID_STR), getStringById(R.string.PC_STR),
+                        getStringById(R.string.MARKETTYPEID_STR), getStringById(R.string.GENERIC_STR),
+                        getStringById(R.string.POOQ_CREDENTIAL_STR), authKey,
+                        getStringById(R.string.QUALITY_STR), getQualityTag(),
+                        getStringById(R.string.DEVICEMODEID_STR), getStringById(R.string.PC_STR),
+                        getStringById(R.string.AUTHTYPE_STR), getStringById(R.string.URL_STR))
+                        .userAgent(getStringById(R.string.USERAGENT))
+                        .body();
 
-            resultJson = HttpRequest.get(url, true,
-                    getStringById(R.string.DEVICETYPEID_STR), getStringById(R.string.PC_STR),
-                    getStringById(R.string.MARKETTYPEID_STR), getStringById(R.string.GENERIC_STR),
-                    getStringById(R.string.POOQ_CREDENTIAL_STR), authKey,
-                    getStringById(R.string.QUALITY_STR), getQualityTag(),
-                    getStringById(R.string.DEVICEMODEID_STR), getStringById(R.string.PC_STR),
-                    getStringById(R.string.AUTHTYPE_STR), getStringById(R.string.URL_STR))
-                    .userAgent(getStringById(R.string.USERAGENT))
-                    .body();
+                JsonParser parser = new JsonParser();
 
-            JsonParser parser = new JsonParser();
+                String videoUrl = Utils.removeQuote(parser.parse(resultJson).getAsJsonObject().get(getStringById(R.string.RESULT_STR))
+                        .getAsJsonObject()
+                        .get(getStringById(R.string.SIGNEDURL_STR))
+                        .getAsString());
 
-            String videoUrl = Utils.removeQuote(parser.parse(resultJson).getAsJsonObject().get(getStringById(R.string.RESULT_STR))
-                    .getAsJsonObject()
-                    .get(getStringById(R.string.SIGNEDURL_STR))
-                    .getAsString());
+                if (videoUrl == null || videoUrl.equals(getStringById(R.string.NULL_STR)) || videoUrl.length() == 0) {
+                    return Utils.Code.NoVideoUrl_err.ordinal();
+                }
 
-            if (videoUrl == null || videoUrl.equals(getStringById(R.string.NULL_STR)) || videoUrl.length() == 0) {
+                setVideoUrlByIndex(Utils.SiteType.Pooq, arrIndex, videoUrl);
+
+                playVideo(chList.get(arrIndex), progInfo);
+
+                return Utils.Code.FetchVideoUrlTask_OK.ordinal();
+            } catch (java.lang.ArithmeticException ex) {
                 return Utils.Code.NoVideoUrl_err.ordinal();
+            } finally {
+
             }
-
-            setVideoUrlByIndex(Utils.SiteType.Pooq, arrIndex, videoUrl);
-
-            playVideo(chList.get(arrIndex), progInfo);
-
-            return Utils.Code.FetchVideoUrlTask_OK.ordinal();
         }
 
         private String getQualityTag() {
