@@ -1,1 +1,3 @@
-{ "com.ksi.alltv": { "minVersionCode": 6, "enable": true, "force": false } }
+{ 
+	"PatchedVersion": "1.6"
+}
