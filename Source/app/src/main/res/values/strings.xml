@@ -36,4 +36,7 @@
     <string name="oksusu_login_fail">옥수수 로그인에 실패했습니다.</string>
     <string name="pooq_login_fail">POOQ 로그인에 실패했습니다.</string>
     <string name="version_str">버전 :</string>
+    <string name="update_title_str">업데이트 안내</string>
+    <string name="update_version_str">새로운 버전의 업데이트가 있습니다. Github에서 확인해 보세요.</string>
+    <string name="ok_str">확인</string>
 </resources>

@@ -68,6 +68,8 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
     private Boolean beStarted = false;
 
+    private VersionChecker mVersionChecker;
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -127,6 +129,11 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
         mChannelResultReceiver = new FetchChannelResultReceiver(mHandler);
         mChannelResultReceiver.setReceiver(this);
+
+        //Version Check
+        mVersionChecker = new VersionChecker(getActivity());
+        mVersionChecker.setcheckJsonUrl(getStringById(R.string.UPDATE_JSON_URL));
+        mVersionChecker.check();
     }
 
     @Override
