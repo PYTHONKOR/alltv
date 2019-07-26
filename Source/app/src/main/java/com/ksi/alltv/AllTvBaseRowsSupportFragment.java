@@ -54,7 +54,6 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        createRows();
     }
 
     @Override
@@ -108,11 +107,11 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
 
     public abstract void createRows();
 
-    protected void createDefaultRows() {
+    public void createDefaultRows(String errMsg) {
         CardPresenter presenterSelector = new CardPresenter();
         ArrayObjectAdapter adapter = new ArrayObjectAdapter(presenterSelector);
 
-        HeaderItem headerItem = new HeaderItem(getStringById(R.string.dologin_please));
+        HeaderItem headerItem = new HeaderItem(errMsg);
 
         mRowsAdapter.add(new ListRow(headerItem, adapter));
     }
@@ -172,9 +171,4 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
             }
         }
     }
-
-
-
-
 }
-

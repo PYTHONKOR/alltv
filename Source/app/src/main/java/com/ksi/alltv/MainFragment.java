@@ -97,7 +97,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
             OksusuRowSupportFragment.setQualityType(mSettingsData.mOksusuSettings.mQualityType);
             PooqRowSupportFragment.setQualityType(mSettingsData.mPooqSettings.mQualityType);
 
-        } else if(BuildConfig.DEBUG) {
+        } else if (BuildConfig.DEBUG) {
 
             mSettingsData.mOksusuSettings.mId = getStringById(R.string.OksusuId);
             mSettingsData.mOksusuSettings.mPassword = getStringById(R.string.OksusuPwd);
@@ -157,7 +157,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
     public void refreshServiceIntent(Utils.SiteType inSiteType) {
 
-        if(beStarted) {
+        if (beStarted) {
             beStarted = false;
             return;
         }
@@ -243,7 +243,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
         setOnSearchClickedListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(BuildConfig.DEBUG) {
+                if (BuildConfig.DEBUG) {
                     new Thread(new Runnable() {
                         public void run() {
                             new Instrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
@@ -320,7 +320,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
         Utils.SiteType siteType = (Utils.SiteType) resultData.get(getStringById(R.string.SITETYPE_STR));
 
-        if(mSpinnerFragment[siteType.ordinal()] != null)
+        if (mSpinnerFragment[siteType.ordinal()] != null)
             getFragmentManager().beginTransaction().remove(mSpinnerFragment[siteType.ordinal()]).commit();
 
         switch (Utils.Code.values()[resultCode]) {
@@ -355,12 +355,20 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
             case ServiceIntent_Fail:
                 switch (siteType) {
                     case Oksusu:
-                        Utils.showToast(getContext(), R.string.oksusu_login_fail);
+                        if (mSettingsData.mOksusuSettings.mId != null && mSettingsData.mOksusuSettings.mId.length() > 0)
+                            Utils.showToast(getContext(), R.string.oksusu_login_fail);
                         break;
                     case Pooq:
-                        Utils.showToast(getContext(), R.string.pooq_login_fail);
-                        break;
+                        if (mSettingsData.mPooqSettings.mId != null && mSettingsData.mPooqSettings.mId.length() > 0)
+                            Utils.showToast(getContext(), R.string.pooq_login_fail);
                 }
+
+                Fragment fragment = getMainFragment();
+
+                if (fragment instanceof AllTvBaseRowsSupportFragment) {
+                    ((AllTvBaseRowsSupportFragment) fragment).createDefaultRows(getStringById(R.string.dologin_please));
+                }
+
                 break;
         }
     }

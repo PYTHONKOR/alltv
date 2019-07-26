@@ -103,7 +103,7 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
         mRowsAdapter.clear();
 
         if (isEmptyCategory(mType)) {
-            createDefaultRows();
+            createDefaultRows(getStringById(R.string.dologin_please));
             getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
             return;
         }
@@ -131,7 +131,7 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
             mRowsAdapter.add(new ListRow(headerItem, adapter));
         }
 
-        if(getMainFragmentAdapter() != null)
+        if (getMainFragmentAdapter() != null)
             getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
     }
 
@@ -155,7 +155,7 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
                     .userAgent("Mozilla/4.0")
                     .header(getStringById(R.string.COOKIE_STR), authKey);
 
-            if( request.isBodyEmpty() ) {
+            if (request.isBodyEmpty()) {
                 return Utils.Code.NoVideoUrl_err.ordinal();
             }
 
@@ -177,7 +177,7 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
 
                 JsonArray progArray = new JsonArray();
 
-                for(int i=0; i<array.size(); i++) {
+                for (int i = 0; i < array.size(); i++) {
 
                     String name = array.get(i).getAsJsonObject().get("programName").getAsString();
                     String stime = array.get(i).getAsJsonObject().get("startTimeYMDHIS").getAsString();

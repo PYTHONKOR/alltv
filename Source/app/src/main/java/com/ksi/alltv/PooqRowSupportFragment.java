@@ -100,13 +100,13 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
 
         mRowsAdapter.clear();
 
-        if(isEmptyCategory(mType)) {
-            createDefaultRows();
+        if (isEmptyCategory(mType)) {
+            createDefaultRows(getStringById(R.string.dologin_please));
             getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
             return;
         }
 
-        if(mAuthKey != null) {
+        if (mAuthKey != null) {
             String authKey = mAuthKey.get(mType);
         }
 
@@ -170,7 +170,7 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
 
             String progInfo = null;
 
-            if(resultJson != null && !resultJson.equals(getStringById(R.string.NULL_STR)) && resultJson.length() != 0) {
+            if (resultJson != null && !resultJson.equals(getStringById(R.string.NULL_STR)) && resultJson.length() != 0) {
 
                 JsonParser jsonParser = new JsonParser();
                 JsonElement jsonElement = jsonParser.parse(resultJson);
@@ -179,7 +179,7 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
 
                 JsonArray progArray = new JsonArray();
 
-                for(int i=0; i<array.size(); i++) {
+                for (int i = 0; i < array.size(); i++) {
 
                     String name = array.get(i).getAsJsonObject().get("title").getAsString();
                     String stime = array.get(i).getAsJsonObject().get("starttime").getAsString();
@@ -218,9 +218,9 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
             JsonParser parser = new JsonParser();
 
             String videoUrl = Utils.removeQuote(parser.parse(resultJson).getAsJsonObject().get(getStringById(R.string.RESULT_STR))
-                                .getAsJsonObject()
-                                .get(getStringById(R.string.SIGNEDURL_STR))
-                                .getAsString());
+                    .getAsJsonObject()
+                    .get(getStringById(R.string.SIGNEDURL_STR))
+                    .getAsString());
 
             if (videoUrl == null || videoUrl.equals(getStringById(R.string.NULL_STR)) || videoUrl.length() == 0) {
                 return Utils.Code.NoVideoUrl_err.ordinal();
@@ -247,7 +247,5 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
 
             return getStringById(R.string.URLAUTO_STR);
         }
-
-
     }
 }
