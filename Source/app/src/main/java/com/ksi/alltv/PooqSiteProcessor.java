@@ -68,90 +68,103 @@ public class PooqSiteProcessor extends SiteProcessor {
 
     private void getLiveTvList() {
 
-        if (mAuthKey == null || mAuthKey.length() == 0)
-            return;
+        try {
+            if (mAuthKey == null || mAuthKey.length() == 0)
+                return;
 
-        String resultJson = HttpRequest.get(getAppDataString(R.string.POOQ_CHANNELLIST_URL), true,
-                getAppDataString(R.string.DEVICETYPEID_STR), getAppDataString(R.string.PC_STR),
-                getAppDataString(R.string.MARKETTYPEID_STR), getAppDataString(R.string.GENERIC_STR),
-                getAppDataString(R.string.CREDENTIAL_STR), getAppDataString(R.string.POOQ_API_ACCESSKEY_STR),
-                getAppDataString(R.string.POOQ_CREDENTIAL_STR), mAuthKey)
-                .userAgent(getAppDataString(R.string.USERAGENT))
-                .body();
+            String resultJson = HttpRequest.get(getAppDataString(R.string.POOQ_CHANNELLIST_URL), true,
+                    getAppDataString(R.string.DEVICETYPEID_STR), getAppDataString(R.string.PC_STR),
+                    getAppDataString(R.string.MARKETTYPEID_STR), getAppDataString(R.string.GENERIC_STR),
+                    getAppDataString(R.string.CREDENTIAL_STR), getAppDataString(R.string.POOQ_API_ACCESSKEY_STR),
+                    getAppDataString(R.string.POOQ_CREDENTIAL_STR), mAuthKey)
+                    .userAgent(getAppDataString(R.string.USERAGENT))
+                    .body();
 
-        if(resultJson == null || resultJson.equals(getAppDataString(R.string.NULL_STR)) || resultJson.length() == 0)
-            return;
+            if (resultJson == null || resultJson.equals(getAppDataString(R.string.NULL_STR)) || resultJson.length() == 0)
+                return;
 
-        JsonParser jParser = new JsonParser();
-        JsonArray jArray = jParser.parse(resultJson).getAsJsonObject().
-                get(getAppDataString(R.string.RESULT_STR)).getAsJsonObject().getAsJsonArray(getAppDataString(R.string.LIST_STR));
+            JsonParser jParser = new JsonParser();
+            JsonArray jArray = jParser.parse(resultJson).getAsJsonObject().
+                    get(getAppDataString(R.string.RESULT_STR)).getAsJsonObject().getAsJsonArray(getAppDataString(R.string.LIST_STR));
 
-        mChannelDatas.clear();
-        mCategoryDatas.clear();
+            mChannelDatas.clear();
+            mCategoryDatas.clear();
 
-        for (JsonElement arr : jArray) {
-            JsonObject categoryObj = arr.getAsJsonObject();
+            for (JsonElement arr : jArray) {
+                JsonObject categoryObj = arr.getAsJsonObject();
 
-            CategoryData ctData = new CategoryData();
+                CategoryData ctData = new CategoryData();
 
-            int categoryId = categoryObj.get(getAppDataString(R.string.GENRECODE_STR)).getAsInt();
-            ctData.setId(categoryId);
-            ctData.setTitle(Utils.removeQuote(categoryObj.get(getAppDataString(R.string.GENRETITLE_STR)).getAsString()));
+                int categoryId = categoryObj.get(getAppDataString(R.string.GENRECODE_STR)).getAsInt();
+                ctData.setId(categoryId);
+                ctData.setTitle(Utils.removeQuote(categoryObj.get(getAppDataString(R.string.GENRETITLE_STR)).getAsString()));
 
-            mCategoryDatas.add(ctData);
+                mCategoryDatas.add(ctData);
 
-            JsonArray chArray = arr.getAsJsonObject().getAsJsonArray(getAppDataString(R.string.LIST_STR));
+                JsonArray chArray = arr.getAsJsonObject().getAsJsonArray(getAppDataString(R.string.LIST_STR));
 
-            for (JsonElement chEle : chArray) {
+                for (JsonElement chEle : chArray) {
 
-                JsonObject chObj = chEle.getAsJsonObject();
+                    JsonObject chObj = chEle.getAsJsonObject();
 
-                ChannelData chData = new ChannelData();
+                    ChannelData chData = new ChannelData();
 
-                String channelName = Utils.removeQuote(chObj.get(getAppDataString(R.string.CHANNELTITLE_STR)).getAsString());
-                String programName = Utils.removeQuote(chObj.get(getAppDataString(R.string.TITLENAME_STR)).getAsString());
+                    String channelName = Utils.removeQuote(chObj.get(getAppDataString(R.string.CHANNELTITLE_STR)).getAsString());
+                    String programName = Utils.removeQuote(chObj.get(getAppDataString(R.string.TITLENAME_STR)).getAsString());
 
-                chData.setTitle(channelName);
-                chData.setProgram(programName);
-                chData.setStillImageUrl(Utils.removeQuote(chObj.get(getAppDataString(R.string.CHANNELIMAGE_STR)).getAsString()));
-                chData.setId(Utils.removeQuote(chObj.get(getAppDataString(R.string.ID_STR)).getAsString()));
-                chData.setCategoryId(categoryId);
-                chData.setAudioChannel(Utils.removeQuote(chObj.get(getAppDataString(R.string.ISRADIO_TAG)).getAsString())
-                        .equals(getAppDataString(R.string.YES_STR)));
+                    chData.setTitle(channelName);
+                    chData.setProgram(programName);
+                    chData.setStillImageUrl(Utils.removeQuote(chObj.get(getAppDataString(R.string.CHANNELIMAGE_STR)).getAsString()));
+                    chData.setId(Utils.removeQuote(chObj.get(getAppDataString(R.string.ID_STR)).getAsString()));
+                    chData.setCategoryId(categoryId);
+                    chData.setAudioChannel(Utils.removeQuote(chObj.get(getAppDataString(R.string.ISRADIO_TAG)).getAsString())
+                            .equals(getAppDataString(R.string.YES_STR)));
 
-                mChannelDatas.add(chData);
+                    mChannelDatas.add(chData);
+                }
             }
+        } catch (java.lang.ArithmeticException ex) {
+            mChannelDatas.clear();
+            mCategoryDatas.clear();
+        } finally {
+
         }
     }
 
     private void doLogin(SettingsData inSettingsData) {
 
-        String requestUrl = getAppDataString(R.string.POOQ_LOGIN_URL) + "?" +
-                getAppDataString(R.string.MODE_STR) + "=" + getAppDataString(R.string.ID_STR) + "&" +
-                getAppDataString(R.string.ID_STR) + "=" + inSettingsData.mPooqSettings.mId + "&" +
-                getAppDataString(R.string.PASSWORD_STR) + "=" + inSettingsData.mPooqSettings.mPassword + "&" +
-                getAppDataString(R.string.POOQ_CREDENTIAL_STR) + "=" + getAppDataString(R.string.POOQ_CREDENTIAL_STR) + "&" +
-                getAppDataString(R.string.DEVICETYPEID_STR) + "=" + getAppDataString(R.string.PC_STR) + "&" +
-                getAppDataString(R.string.MARKETTYPEID_STR) + "=" + getAppDataString(R.string.GENERIC_STR) + "&" +
-                getAppDataString(R.string.CREDENTIAL_STR) + "=" + getAppDataString(R.string.POOQ_API_ACCESSKEY_STR);
+        try {
+            String requestUrl = getAppDataString(R.string.POOQ_LOGIN_URL) + "?" +
+                    getAppDataString(R.string.MODE_STR) + "=" + getAppDataString(R.string.ID_STR) + "&" +
+                    getAppDataString(R.string.ID_STR) + "=" + inSettingsData.mPooqSettings.mId + "&" +
+                    getAppDataString(R.string.PASSWORD_STR) + "=" + inSettingsData.mPooqSettings.mPassword + "&" +
+                    getAppDataString(R.string.POOQ_CREDENTIAL_STR) + "=" + getAppDataString(R.string.POOQ_CREDENTIAL_STR) + "&" +
+                    getAppDataString(R.string.DEVICETYPEID_STR) + "=" + getAppDataString(R.string.PC_STR) + "&" +
+                    getAppDataString(R.string.MARKETTYPEID_STR) + "=" + getAppDataString(R.string.GENERIC_STR) + "&" +
+                    getAppDataString(R.string.CREDENTIAL_STR) + "=" + getAppDataString(R.string.POOQ_API_ACCESSKEY_STR);
 
-        String resultJson = HttpRequest.post(requestUrl, true)
-                            .userAgent(getAppDataString(R.string.USERAGENT))
-                            .body();
+            String resultJson = HttpRequest.post(requestUrl, true)
+                    .userAgent(getAppDataString(R.string.USERAGENT))
+                    .body();
 
-        if(resultJson == null || resultJson.equals(getAppDataString(R.string.NULL_STR)) || resultJson.length() == 0)
-            return;
+            if (resultJson == null || resultJson.equals(getAppDataString(R.string.NULL_STR)) || resultJson.length() == 0)
+                return;
 
-        JsonParser parser = new JsonParser();
+            JsonParser parser = new JsonParser();
 
-        JsonElement returnCode = parser.parse(resultJson).getAsJsonObject().get(getAppDataString(R.string.RETURNCODE_TAG));
+            JsonElement returnCode = parser.parse(resultJson).getAsJsonObject().get(getAppDataString(R.string.RETURNCODE_TAG));
 
-        if (returnCode == null || returnCode.getAsInt() != getAppDataInt(R.integer.POOQ_SUCCESS_CODE)) {
-            return;
+            if (returnCode == null || returnCode.getAsInt() != getAppDataInt(R.integer.POOQ_SUCCESS_CODE)) {
+                return;
+            }
+
+            mAuthKey = Utils.removeQuote(parser.parse(resultJson).getAsJsonObject().
+                    get(getAppDataString(R.string.RESULT_STR)).getAsJsonObject().
+                    get(getAppDataString(R.string.POOQ_CREDENTIAL_STR)).getAsString());
+        } catch (java.lang.ArithmeticException ex) {
+            mAuthKey = "";
+        } finally {
+
         }
-
-        mAuthKey = Utils.removeQuote(parser.parse(resultJson).getAsJsonObject().
-                get(getAppDataString(R.string.RESULT_STR)).getAsJsonObject().
-                get(getAppDataString(R.string.POOQ_CREDENTIAL_STR)).getAsString());
     }
 }
