@@ -90,7 +90,7 @@ public class FetchChannelService extends IntentService {
             int retCode;
             String authKey = mSiteProcessor.getAuthKey();
 
-            if(authKey == null || authKey.length() == 0) {
+            if (authKey == null || authKey.length() == 0 || channels.size() == 0 || category.size() == 0) {
                 retCode = Utils.Code.ServiceIntent_Fail.ordinal();
             } else {
                 retCode = Utils.Code.ServiceIntent_OK.ordinal();

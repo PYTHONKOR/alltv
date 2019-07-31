@@ -208,7 +208,7 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
                 playVideo(chList.get(arrIndex), progInfo);
 
                 return Utils.Code.FetchVideoUrlTask_OK.ordinal();
-            } catch (java.lang.ArithmeticException ex) {
+            } catch (Exception ex) {
                 return Utils.Code.NoVideoUrl_err.ordinal();
             } finally {
 

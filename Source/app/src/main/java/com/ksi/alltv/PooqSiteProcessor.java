@@ -123,7 +123,7 @@ public class PooqSiteProcessor extends SiteProcessor {
                     mChannelDatas.add(chData);
                 }
             }
-        } catch (java.lang.ArithmeticException ex) {
+        } catch (Exception ex) {
             mChannelDatas.clear();
             mCategoryDatas.clear();
         } finally {
@@ -161,7 +161,7 @@ public class PooqSiteProcessor extends SiteProcessor {
             mAuthKey = Utils.removeQuote(parser.parse(resultJson).getAsJsonObject().
                     get(getAppDataString(R.string.RESULT_STR)).getAsJsonObject().
                     get(getAppDataString(R.string.POOQ_CREDENTIAL_STR)).getAsString());
-        } catch (java.lang.ArithmeticException ex) {
+        } catch (Exception ex) {
             mAuthKey = "";
         } finally {
 

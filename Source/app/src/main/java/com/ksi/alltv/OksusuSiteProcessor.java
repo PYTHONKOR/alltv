@@ -98,14 +98,19 @@ public class OksusuSiteProcessor extends SiteProcessor {
 
                 ChannelData chData = new ChannelData();
 
-                String channelName = Utils.removeQuote(channelObj.get(getAppDataString(R.string.CHANNELNAME_TAG)).getAsString());
+                if (!channelObj.get(getAppDataString(R.string.CHANNELNAME_TAG)).isJsonNull()) {
+                    String channelName = Utils.removeQuote(channelObj.get(getAppDataString(R.string.CHANNELNAME_TAG)).getAsString());
+                    chData.setTitle(channelName);
+                }
 
-                chData.setTitle(channelName);
+                if (!channelObj.getAsJsonArray(getAppDataString(R.string.PROGRAMS_TAG)).isJsonNull()) {
+                    JsonArray programs = channelObj.getAsJsonArray(getAppDataString(R.string.PROGRAMS_TAG));
 
-                JsonArray programs = channelObj.getAsJsonArray(getAppDataString(R.string.PROGRAMS_TAG));
-                String programName = Utils.removeQuote(programs.get(0).getAsJsonObject().get(getAppDataString(R.string.PROGRAMNAME_TAG)).getAsString());
-
-                chData.setProgram(programName);
+                    if (programs.size() > 0 && !programs.get(0).getAsJsonObject().get(getAppDataString(R.string.PROGRAMNAME_TAG)).isJsonNull()) {
+                        String programName = Utils.removeQuote(programs.get(0).getAsJsonObject().get(getAppDataString(R.string.PROGRAMNAME_TAG)).getAsString());
+                        chData.setProgram(programName);
+                    }
+                }
 
                 String stillImageUrl = Utils.removeQuote(channelObj.get(getAppDataString(R.string.STILLIMAGE_TAG)).getAsString());
 
@@ -134,7 +139,7 @@ public class OksusuSiteProcessor extends SiteProcessor {
 
                 mCategoryDatas.add(ctData);
             }
-        } catch (java.lang.ArithmeticException ex) {
+        } catch (Exception ex) {
             mChannelDatas.clear();
             mCategoryDatas.clear();
         } finally {
@@ -170,7 +175,7 @@ public class OksusuSiteProcessor extends SiteProcessor {
                 mAuthKey = receivedCookies.substring(receivedCookies
                         .lastIndexOf(getAppDataString(R.string.CORNAC_STR)), receivedCookies.lastIndexOf(getAppDataString(R.string.DOMAIN_STR)));
             }
-        } catch (java.lang.ArithmeticException ex) {
+        } catch (Exception ex) {
             mAuthKey = "";
         } finally {
 
