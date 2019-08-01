@@ -117,6 +117,8 @@ public class OksusuSiteProcessor extends SiteProcessor {
                 if (!channelObj.get(getAppDataString(R.string.UNDER19CONTENT_TAG)).getAsBoolean()) {
                     stillImageUrl = getAppDataString(R.string.OKSUSULOGO_URL) +
                             Utils.removeQuote(channelObj.get(getAppDataString(R.string.CHANNELIMAGENAME_TAG)).getAsString());
+
+                    chData.setProgram("");
                 }
 
                 chData.setStillImageUrl(stillImageUrl);
