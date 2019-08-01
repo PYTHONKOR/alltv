@@ -59,6 +59,7 @@ import com.squareup.picasso.Target;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 
 public class PlayerActivity extends FragmentActivity implements Player.EventListener, Target {
@@ -80,7 +81,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
     private JsonArray mInfoArray;
     private int mInfoIndex;
 
-    private boolean isPageOpen=false;
+    private boolean isPageOpen = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -88,9 +89,9 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         setContentView(R.layout.activity_videoplayer);
 
-        slidingPanel=(LinearLayout)findViewById(R.id.slidingPanel);
-        infoView=(TextView)findViewById(R.id.infoView);
-        timeView=(TextView)findViewById(R.id.timeView);
+        slidingPanel = (LinearLayout) findViewById(R.id.slidingPanel);
+        infoView = (TextView) findViewById(R.id.infoView);
+        timeView = (TextView) findViewById(R.id.timeView);
 
         mPlayerView = findViewById(R.id.video_view);
 
@@ -99,13 +100,13 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         mPlayerView.setPlayer(mPlayer);
         mPlayerView.setUseController(false);
 
-        if(BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG) {
             mPlayerView.setOnTouchListener(new View.OnTouchListener() {
 
                 @Override
                 public boolean onTouch(View view, MotionEvent motionEvent) {
 
-                    if(motionEvent.getX() < 100. && motionEvent.getY() < 100.) {
+                    if (motionEvent.getX() < 100. && motionEvent.getY() < 100.) {
 
                         new Thread(new Runnable() {
                             public void run() {
@@ -114,7 +115,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                         }).start();
 
                     } else {
-                        if(isPageOpen) {
+                        if (isPageOpen) {
                             hideProgramInfo();
                         } else {
                             showProgramInfo();
@@ -135,7 +136,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         infoView.setText("");
         mInfoArray = null;
 
-        if(info != null && info.length() > 0) {
+        if (info != null && info.length() > 0) {
             JsonParser jsonParser = new JsonParser();
             mInfoArray = jsonParser.parse(info).getAsJsonArray();
         } else {
@@ -155,39 +156,47 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         mPlayer.setPlayWhenReady(true);
         mPlayer.addListener(this);
 
-        translateTopAnim =AnimationUtils.loadAnimation(this,R.anim.translate_top);
-        translateBottomAnim =AnimationUtils.loadAnimation(this,R.anim.translate_bottom);
+        translateTopAnim = AnimationUtils.loadAnimation(this, R.anim.translate_top);
+        translateBottomAnim = AnimationUtils.loadAnimation(this, R.anim.translate_bottom);
 
         translateTopAnim.setAnimationListener(new Animation.AnimationListener() {
             @Override
-            public void onAnimationStart(Animation animation) { }
+            public void onAnimationStart(Animation animation) {
+            }
+
             @Override
             public void onAnimationEnd(Animation animation) {
-                if(isPageOpen) {
+                if (isPageOpen) {
                     slidingPanel.setVisibility(View.INVISIBLE);
-                    isPageOpen=false;
+                    isPageOpen = false;
                 } else {
-                    isPageOpen=true;
+                    isPageOpen = true;
                 }
             }
+
             @Override
-            public void onAnimationRepeat(Animation animation) { }
+            public void onAnimationRepeat(Animation animation) {
+            }
         });
 
         translateBottomAnim.setAnimationListener(new Animation.AnimationListener() {
             @Override
-            public void onAnimationStart(Animation animation) { }
+            public void onAnimationStart(Animation animation) {
+            }
+
             @Override
             public void onAnimationEnd(Animation animation) {
-                if(isPageOpen) {
+                if (isPageOpen) {
                     slidingPanel.setVisibility(View.INVISIBLE);
-                    isPageOpen=false;
+                    isPageOpen = false;
                 } else {
-                    isPageOpen=true;
+                    isPageOpen = true;
                 }
             }
+
             @Override
-            public void onAnimationRepeat(Animation animation) { }
+            public void onAnimationRepeat(Animation animation) {
+            }
         });
 
         mHandler = new Handler();
@@ -200,26 +209,24 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
     }
 
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event)
-    {
-        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER)
-        {
-            if(isPageOpen) {
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
+            if (isPageOpen) {
                 hideProgramInfo();
             } else {
                 showProgramInfo();
             }
-        } else if(keyCode == KeyEvent.KEYCODE_BACK) {
-            if(isPageOpen) {
+        } else if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if (isPageOpen) {
                 hideProgramInfo();
                 return false;
             }
-        } else if(keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+        } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
 
-            if(isPageOpen && mInfoArray != null) {
+            if (isPageOpen && mInfoArray != null) {
 
-                if(mInfoIndex > 0) mInfoIndex -= 1;
-                else               mInfoIndex = 0;
+                if (mInfoIndex > 0) mInfoIndex -= 1;
+                else mInfoIndex = 0;
 
                 displayProgramInfo();
 
@@ -227,12 +234,12 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                 mHandler.postDelayed(mRunnable, 5000);
             }
 
-        } else if(keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+        } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
 
-            if(isPageOpen && mInfoArray != null) {
+            if (isPageOpen && mInfoArray != null) {
 
-                if(mInfoIndex < mInfoArray.size()-1) mInfoIndex += 1;
-                else                                 mInfoIndex = mInfoArray.size()-1;
+                if (mInfoIndex < mInfoArray.size() - 1) mInfoIndex += 1;
+                else mInfoIndex = mInfoArray.size() - 1;
 
                 displayProgramInfo();
 
@@ -256,41 +263,53 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
     private void showProgramInfo() {
 
-        if(isPageOpen) return;
+        try {
+            if (isPageOpen) return;
 
-        if(mInfoArray != null) {
-            mInfoIndex = 0;
+            if (mInfoArray != null) {
+                mInfoIndex = 0;
 
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm00");
-            String currentTime = sdf.format(new Date());
+                SimpleDateFormat sdf = new SimpleDateFormat(getResources().getString(R.string.TIME_FORMAT_STR), Locale.KOREA);
+                String currentTime = sdf.format(new Date());
 
-            for(int i=0; i<mInfoArray.size()-1; i++) {
-                String stime = mInfoArray.get(i).getAsJsonObject().get("stime").getAsString();
-                String etime = mInfoArray.get(i).getAsJsonObject().get("etime").getAsString();
+                for (int i = 0; i < mInfoArray.size() - 1; i++) {
 
-                if(currentTime.compareTo(etime) <= 0) {
-                    mInfoIndex = i;
-                    break;
+                    if (mInfoArray.get(i).isJsonNull())
+                        continue;
+
+                    if (mInfoArray.get(i).getAsJsonObject().get(getResources().getString(R.string.ETIME_STR)).isJsonNull())
+                        continue;
+
+                    String etime = mInfoArray.get(i).getAsJsonObject().get(getResources().getString(R.string.ETIME_STR)).getAsString();
+
+                    if (currentTime.compareTo(etime) <= 0) {
+                        mInfoIndex = i;
+                        break;
+                    }
                 }
+
+                sdf = new SimpleDateFormat(getResources().getString(R.string.CURRENT_TIME_FORMAT_STR), Locale.KOREA);
+                currentTime = sdf.format(new Date());
+
+                timeView.setText(currentTime);
+
+                displayProgramInfo();
             }
 
-            sdf = new SimpleDateFormat("HH:mm");
-            currentTime = sdf.format(new Date());
+            slidingPanel.startAnimation(translateTopAnim);
+            slidingPanel.setVisibility(View.VISIBLE);
 
-            timeView.setText(currentTime);
+            mHandler.postDelayed(mRunnable, 5000);
+        } catch (Exception ex) {
 
-            displayProgramInfo();
+        } finally {
+
         }
-
-        slidingPanel.startAnimation(translateTopAnim);
-        slidingPanel.setVisibility(View.VISIBLE);
-
-        mHandler.postDelayed(mRunnable, 5000);
     }
 
     private void hideProgramInfo() {
 
-        if(!isPageOpen) return;
+        if (!isPageOpen) return;
 
         slidingPanel.startAnimation(translateBottomAnim);
         slidingPanel.setVisibility(View.GONE);
@@ -300,14 +319,34 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
     private void displayProgramInfo() {
 
-        String stime = mInfoArray.get(mInfoIndex).getAsJsonObject().get("stime").getAsString();
-        String etime = mInfoArray.get(mInfoIndex).getAsJsonObject().get("etime").getAsString();
-        String name = mInfoArray.get(mInfoIndex).getAsJsonObject().get("name").getAsString();
+        try {
+            String stime = getResources().getString(R.string.noinfo_str);
+            String etime = getResources().getString(R.string.noinfo_str);
+            String name = getResources().getString(R.string.noinfo_str);
 
-        stime = stime.substring(8, 10) + ":" + stime.substring(10, 12);
-        etime = etime.substring(8, 10) + ":" + etime.substring(10, 12);
+            if (!mInfoArray.get(mInfoIndex).getAsJsonObject().get(getResources().getString(R.string.STIME_STR)).isJsonNull())
+                stime = mInfoArray.get(mInfoIndex).getAsJsonObject().get(getResources().getString(R.string.STIME_STR)).getAsString();
 
-        infoView.setText(stime + " ~ " + etime + "\n" + name + "\n");
+            if (!mInfoArray.get(mInfoIndex).getAsJsonObject().get(getResources().getString(R.string.ETIME_STR)).isJsonNull())
+                etime = mInfoArray.get(mInfoIndex).getAsJsonObject().get(getResources().getString(R.string.ETIME_STR)).getAsString();
+
+            if (!mInfoArray.get(mInfoIndex).getAsJsonObject().get(getResources().getString(R.string.NAME_STR)).isJsonNull())
+                name = mInfoArray.get(mInfoIndex).getAsJsonObject().get(getResources().getString(R.string.NAME_STR)).getAsString();
+
+
+            if (!stime.equals(getResources().getString(R.string.noinfo_str)))
+                stime = stime.substring(8, 10) + ":" + stime.substring(10, 12);
+
+            if (!etime.equals(getResources().getString(R.string.noinfo_str)))
+                etime = etime.substring(8, 10) + ":" + etime.substring(10, 12);
+
+            String finalText = stime + " ~ " + etime + "\n" + name + "\n";
+            infoView.setText(finalText);
+        } catch (Exception ex) {
+            infoView.setText(getResources().getString(R.string.noinfo_str));
+        } finally {
+
+        }
     }
 
     private void releasePlayer() {

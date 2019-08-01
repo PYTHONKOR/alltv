@@ -39,4 +39,5 @@
     <string name="update_title_str">업데이트 안내</string>
     <string name="update_version_str">새로운 버전의 업데이트가 있습니다. Github에서 확인해 보세요.</string>
     <string name="ok_str">확인</string>
+    <string name="noinfo_str">정보 없음</string>
 </resources>

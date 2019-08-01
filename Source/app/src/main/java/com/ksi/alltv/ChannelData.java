@@ -57,6 +57,9 @@ public class ChannelData implements Parcelable {
     }
 
     public String getTitle() {
+        if (mTitle == null || mTitle.length() == 0)
+            return " ";
+
         return mTitle;
     }
 
@@ -65,6 +68,9 @@ public class ChannelData implements Parcelable {
     }
 
     public String getProgram() {
+        if (mProgram == null || mProgram.length() == 0)
+            return " ";
+
         return mProgram;
     }
 
@@ -88,9 +94,13 @@ public class ChannelData implements Parcelable {
         this.mStillImageUrl = imageUrl;
     }
 
-    public Boolean isAudioChannel() { return mAudioChannel; }
+    public Boolean isAudioChannel() {
+        return mAudioChannel;
+    }
 
-    public void setAudioChannel(Boolean setAudio) { this.mAudioChannel = setAudio; }
+    public void setAudioChannel(Boolean setAudio) {
+        this.mAudioChannel = setAudio;
+    }
 
     public ChannelData() {
         //Constructor

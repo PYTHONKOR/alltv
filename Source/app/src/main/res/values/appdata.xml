@@ -85,6 +85,11 @@
     <string name="RETURNCODE_TAG">returnCode</string>
     <string name="UPDATE_JSON_URL">https://raw.githubusercontent.com/PYTHONKOR/alltv/master/Source/version.json</string>
     <string name="PATCHED_STR">PatchedVersion</string>
+    <string name="TIME_FORMAT_STR">yyyyMMddHHmm00</string>
+    <string name="STIME_STR">stime</string>
+    <string name="ETIME_STR">etime</string>
+    <string name="NAME_STR">name</string>
+    <string name="CURRENT_TIME_FORMAT_STR">HH:mm</string>
 
     <integer name="GRID_ITEM_WIDTH">300</integer>
     <integer name="GRID_ITEM_HEIGHT">200</integer>
