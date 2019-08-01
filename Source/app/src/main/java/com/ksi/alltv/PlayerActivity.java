@@ -320,9 +320,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
     private void displayProgramInfo() {
 
         try {
-            String stime = getResources().getString(R.string.noinfo_str);
-            String etime = getResources().getString(R.string.noinfo_str);
-            String name = getResources().getString(R.string.noinfo_str);
+            String stime = "", etime = "", name = "", finalText = getResources().getString(R.string.noinfo_str);
 
             if (!mInfoArray.get(mInfoIndex).getAsJsonObject().get(getResources().getString(R.string.STIME_STR)).isJsonNull())
                 stime = mInfoArray.get(mInfoIndex).getAsJsonObject().get(getResources().getString(R.string.STIME_STR)).getAsString();
@@ -334,13 +332,12 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                 name = mInfoArray.get(mInfoIndex).getAsJsonObject().get(getResources().getString(R.string.NAME_STR)).getAsString();
 
 
-            if (!stime.equals(getResources().getString(R.string.noinfo_str)))
+            if (stime != null && stime.length() > 0 && etime != null && etime.length() > 0 && name != null && name.length() > 0) {
                 stime = stime.substring(8, 10) + ":" + stime.substring(10, 12);
-
-            if (!etime.equals(getResources().getString(R.string.noinfo_str)))
                 etime = etime.substring(8, 10) + ":" + etime.substring(10, 12);
+                finalText = stime + " ~ " + etime + "\n" + name + "\n";
+            }
 
-            String finalText = stime + " ~ " + etime + "\n" + name + "\n";
             infoView.setText(finalText);
         } catch (Exception ex) {
             infoView.setText(getResources().getString(R.string.noinfo_str));
