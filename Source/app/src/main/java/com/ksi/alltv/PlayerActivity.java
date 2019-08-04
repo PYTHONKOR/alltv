@@ -217,8 +217,9 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
     @Override
     protected void onNewIntent(Intent intent) {
+        ArrayList<ChannelData> channelData = intent.getParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG));
         mChannels.clear();
-        mChannels = intent.getParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG));
+        mChannels = channelData;
     }
 
     @Override

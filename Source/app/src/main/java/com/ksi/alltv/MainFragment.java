@@ -162,7 +162,6 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
                 String now =  new SimpleDateFormat("HH").format(new Date());
 
-//                if(true) {
                 if(now.compareTo(mUpdateTime) != 0) {
                     mUpdateTime = now;
                     if (mSettingsData.mOksusuSettings.mId != null && mSettingsData.mOksusuSettings.mId.length() > 0) {
@@ -184,7 +183,6 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
         mUpdateTime = new SimpleDateFormat("HH").format(new Date());
 
         mTimer = new Timer();
-//        mTimer.schedule(task, 60 * 1000, 60 * 1000);
         mTimer.schedule(task, 10 * 60 * 1000, 10 * 60 * 1000);
 
     }
@@ -209,11 +207,11 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
     public void refreshServiceIntent(Utils.SiteType inSiteType) {
 
-        if(!PlayerActivity.active) {
+        if(PlayerActivity.active) {
+            mSpinnerFragment[inSiteType.ordinal()] = null;
+        } else {
             mSpinnerFragment[inSiteType.ordinal()] = new SpinnerFragment();
             getFragmentManager().beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment[inSiteType.ordinal()]).commit();
-        } else {
-            mSpinnerFragment[inSiteType.ordinal()] = null;
         }
 
         // Start Service Intent

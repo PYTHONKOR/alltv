@@ -129,7 +129,6 @@ public class FavoriteRowSupportFragment extends AllTvBaseRowsSupportFragment imp
 
         if(getMainFragmentAdapter() != null)
             getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
-
     }
 
     @Override
@@ -140,7 +139,6 @@ public class FavoriteRowSupportFragment extends AllTvBaseRowsSupportFragment imp
     @Override
     public void sendChannelData() {
         Intent intent = new Intent(getActivity(), PlayerActivity.class);
-
         intent.addFlags(FLAG_ACTIVITY_SINGLE_TOP);
         intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels.get(mType));
 

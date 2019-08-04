@@ -142,7 +142,6 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
         }
 
         getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
-
     }
 
     @Override
@@ -153,13 +152,11 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
     @Override
     public void sendChannelData() {
         Intent intent = new Intent(getActivity(), PlayerActivity.class);
-
         intent.addFlags(FLAG_ACTIVITY_SINGLE_TOP);
         intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels.get(mType));
 
         getActivity().startActivity(intent);
     }
-
 
 }
 

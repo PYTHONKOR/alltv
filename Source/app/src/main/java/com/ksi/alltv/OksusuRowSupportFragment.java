@@ -142,7 +142,6 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
 
         if(getMainFragmentAdapter() != null)
             getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
-
     }
 
     @Override
@@ -152,9 +151,7 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
 
     @Override
     public void sendChannelData() {
-
         Intent intent = new Intent(getActivity(), PlayerActivity.class);
-
         intent.addFlags(FLAG_ACTIVITY_SINGLE_TOP);
         intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels.get(mType));
 
