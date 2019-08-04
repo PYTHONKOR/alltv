@@ -43,18 +43,22 @@ public class FetchChannelService extends IntentService {
         super(TAG);
     }
 
+    private String getStringById(int resourceId) {
+        return this.getResources().getString(resourceId);
+    }
+
     @Override
     protected void onHandleIntent(Intent intent) {
 
         if (intent != null) {
             ResultReceiver channelResultReceiver = intent
-                    .getParcelableExtra(getResources().getString(R.string.FETCHCHANNELRESULTRECEIVER_STR));
+                    .getParcelableExtra(getStringById(R.string.FETCHCHANNELRESULTRECEIVER_STR));
 
             Gson gson = new Gson();
             SettingsData receivedData = gson.fromJson(intent
-                    .getStringExtra(getResources().getString(R.string.SETTINGSDATA_STR)), SettingsData.class);
+                    .getStringExtra(getStringById(R.string.SETTINGSDATA_STR)), SettingsData.class);
 
-            Utils.SiteType siteType = (Utils.SiteType) intent.getSerializableExtra(getResources().getString(R.string.SITETYPE_STR));
+            Utils.SiteType siteType = (Utils.SiteType) intent.getSerializableExtra(getStringById(R.string.SITETYPE_STR));
 
             if (siteType == Utils.SiteType.Oksusu) {
                 mSiteProcessor = new OksusuSiteProcessor(getApplicationContext());
@@ -62,7 +66,7 @@ public class FetchChannelService extends IntentService {
                 mSiteProcessor = new PooqSiteProcessor(getApplicationContext());
             }
 
-            String authkey = (String) intent.getSerializableExtra(getResources().getString(R.string.AUTHKEY_STR));
+            String authkey = (String) intent.getSerializableExtra(getStringById(R.string.AUTHKEY_STR));
 
             if (authkey == null || authkey.length() == 0)
                 mSiteProcessor.setAuthKey("");
@@ -82,15 +86,15 @@ public class FetchChannelService extends IntentService {
             int AuthKeyStrId = mSiteProcessor.getAuthKeyStrId();
 
             Bundle retBundle = new Bundle();
-            retBundle.putParcelableArrayList(getResources().getString(channelStrId), channels);
-            retBundle.putParcelableArrayList(getResources().getString(CategoryStrId), category);
-            retBundle.putString(getResources().getString(AuthKeyStrId), mSiteProcessor.getAuthKey());
-            retBundle.putSerializable(getResources().getString(R.string.SITETYPE_STR), siteType);
+            retBundle.putParcelableArrayList(getStringById(channelStrId), channels);
+            retBundle.putParcelableArrayList(getStringById(CategoryStrId), category);
+            retBundle.putString(getStringById(AuthKeyStrId), mSiteProcessor.getAuthKey());
+            retBundle.putSerializable(getStringById(R.string.SITETYPE_STR), siteType);
 
             int retCode;
             String authKey = mSiteProcessor.getAuthKey();
 
-            if (authKey == null || authKey.length() == 0 || channels.size() == 0 || category.size() == 0) {
+            if(authKey == null || authKey.length() == 0) {
                 retCode = Utils.Code.ServiceIntent_Fail.ordinal();
             } else {
                 retCode = Utils.Code.ServiceIntent_OK.ordinal();

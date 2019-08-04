@@ -35,49 +35,17 @@ import android.support.v17.leanback.widget.RowPresenter;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 import static android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP;
 
 
-public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment implements OnItemViewClickedListener {
+public class FavoriteRowSupportFragment extends AllTvBaseRowsSupportFragment implements OnItemViewClickedListener {
 
-    private static final String TAG = OksusuRowSupportFragment.class.getSimpleName();
-    private int mCnt = 0;
+    private static final String TAG = FavoriteRowSupportFragment.class.getSimpleName();
 
-    private static SettingsData.OksusuQualityType mQualityType = SettingsData.OksusuQualityType.AUTO;
-
-    public OksusuRowSupportFragment() {
+    public FavoriteRowSupportFragment() {
         setOnItemViewClickedListener(this);
-        mType = Utils.SiteType.Oksusu;
-    }
-
-    public static void setChannelList(ArrayList<ChannelData> chList) {
-        AllTvBaseRowsSupportFragment.setChannelList(Utils.SiteType.Oksusu, chList);
-    }
-
-    public static void setCategoryList(ArrayList<CategoryData> ctList) {
-        AllTvBaseRowsSupportFragment.setCategoryList(Utils.SiteType.Oksusu, ctList);
-    }
-
-    public static void setAuthKey(String authKey) {
-        AllTvBaseRowsSupportFragment.setAuthKey(Utils.SiteType.Oksusu, authKey);
-    }
-
-    public static void setQualityType(SettingsData.OksusuQualityType inType) {
-
-        if (mQualityType != inType)
-            clearAllVideoUrl();
-
-        mQualityType = inType;
-    }
-
-    public static void clearAllVideoUrl() {
-        AllTvBaseRowsSupportFragment.clearAllVideoUrl(Utils.SiteType.Oksusu);
-    }
-
-    public static void updateFavoriteList(ArrayList<String> favorites) {
-        AllTvBaseRowsSupportFragment.updateFavoriteList(Utils.SiteType.Oksusu, favorites);
+        mType = Utils.SiteType.Favorite;
     }
 
     @Override
@@ -96,7 +64,7 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
     private void playVideo(int currentChannel) {
         if (PlayerActivity.active) return;
 
-        int requestCode = Utils.Code.OksusuPlay.ordinal();
+        int requestCode = Utils.Code.FavoritePlay.ordinal();
         Intent intent = new Intent(getActivity(), PlayerActivity.class);
         intent.addFlags(FLAG_ACTIVITY_SINGLE_TOP);
         intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels.get(mType));
@@ -110,35 +78,54 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
 
         mRowsAdapter.clear();
 
-        if (isEmptyCategory(mType)) {
-            createDefaultRows();
-            getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
+        if (isEmptyCategory(Utils.SiteType.Oksusu) && isEmptyCategory(Utils.SiteType.Pooq)) {
             return;
         }
 
         CardPresenter presenterSelector = new CardPresenter();
+        ArrayObjectAdapter adapter;
 
-        ArrayList<ChannelData> chList = mChannels.containsKey(mType) ? new ArrayList<>(mChannels.get(mType)) : new ArrayList<>();
-        Collections.reverse(chList);
+        ArrayList<ChannelData> chList;
+        ArrayList<ChannelData> chFavorites = new ArrayList<>();
 
-        ArrayList<CategoryData> ctList = mCategory.containsKey(mType) ? mCategory.get(mType) : new ArrayList<>();
+        if(mChannels.get(Utils.SiteType.Pooq) != null) {
+            chList = mChannels.get(Utils.SiteType.Pooq);
+            adapter = new ArrayObjectAdapter(presenterSelector);
 
-        for (CategoryData ctData : ctList) {
-
-            ArrayObjectAdapter adapter = new ArrayObjectAdapter(presenterSelector);
-
-            for (int i = (chList.size() - 1); i >= 0; i--) {
-                if (ctData.getId() == chList.get(i).getCategoryId()) {
-                    adapter.add(chList.get(i));
-                    chList.remove(i);
+            for (int i = 0; i < chList.size(); i++) {
+                ChannelData data = new ChannelData(chList.get(i));
+                if (data.getFavorite() > 0) {
+                    data.setFavorite(3);
+                    chFavorites.add(data);
+                    adapter.add(data);
                 }
             }
-
-            HeaderItem headerItem = new HeaderItem(ctData.getTitle());
-
-            if(adapter.size() > 0)
-                mRowsAdapter.add(new ListRow(headerItem, adapter));
+            if (adapter.size() > 0)
+                mRowsAdapter.add(new ListRow(new HeaderItem("POOQ"), adapter));
         }
+
+        if(mChannels.get(Utils.SiteType.Oksusu) != null) {
+            chList = mChannels.get(Utils.SiteType.Oksusu);
+            adapter = new ArrayObjectAdapter(presenterSelector);
+
+            for (int i = 0; i < chList.size(); i++) {
+                ChannelData data = new ChannelData(chList.get(i));
+                if (data.getFavorite() > 0) {
+                    data.setFavorite(2);
+                    chFavorites.add(data);
+                    adapter.add(data);
+                }
+            }
+            if (adapter.size() > 0)
+                mRowsAdapter.add(new ListRow(new HeaderItem("옥수수"), adapter));
+        }
+
+        if(chFavorites.size() == 0) {
+            adapter = new ArrayObjectAdapter(presenterSelector);
+            mRowsAdapter.add(new ListRow(new HeaderItem("선호채널을 등록해 주세요."), adapter));
+        }
+
+        AllTvBaseRowsSupportFragment.setChannelList(Utils.SiteType.Favorite, chFavorites);
 
         if(getMainFragmentAdapter() != null)
             getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
@@ -152,7 +139,6 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
 
     @Override
     public void sendChannelData() {
-
         Intent intent = new Intent(getActivity(), PlayerActivity.class);
 
         intent.addFlags(FLAG_ACTIVITY_SINGLE_TOP);

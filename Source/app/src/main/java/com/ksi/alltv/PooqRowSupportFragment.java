@@ -24,6 +24,7 @@
 
 package com.ksi.alltv;
 
+import android.content.Intent;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
@@ -31,20 +32,17 @@ import android.support.v17.leanback.widget.OnItemViewClickedListener;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
+import android.util.Log;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
+
+import static android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP;
 
 
 public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment implements OnItemViewClickedListener {
+
+    private static final String TAG = PooqRowSupportFragment.class.getSimpleName();
 
     private static SettingsData.PooqQualityType mQualityType = SettingsData.PooqQualityType.Mobile;
 
@@ -77,22 +75,33 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
         AllTvBaseRowsSupportFragment.clearAllVideoUrl(Utils.SiteType.Pooq);
     }
 
+    public static void updateFavoriteList(ArrayList<String> favorites) {
+        AllTvBaseRowsSupportFragment.updateFavoriteList(Utils.SiteType.Pooq, favorites);
+    }
+
     @Override
     public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item,
                               RowPresenter.ViewHolder rowViewHolder, Row row) {
-
         if (item instanceof ChannelData) {
-
-            String authKey = mAuthKey.get(Utils.SiteType.Pooq);
-
+            String authKey = ((ChannelData) item).getAuthkey();;
             if (authKey == null || authKey.length() < 10) {
                 Utils.showToast(getContext(), getStringById(R.string.nologin_error));
                 return;
             }
-
-            PooqFetchVideoUrlTask runTask = new PooqFetchVideoUrlTask();
-            runTask.execute(mChannels.get(mType).indexOf(item));
+            playVideo(mChannels.get(mType).indexOf(item));
         }
+    }
+
+    private void playVideo(int currentChannel) {
+        if (PlayerActivity.active) return;
+
+        int requestCode = Utils.Code.PooqPlay.ordinal();
+        Intent intent = new Intent(getActivity(), PlayerActivity.class);
+        intent.addFlags(FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels.get(mType));
+        intent.putExtra(getStringById(R.string.CURRENTCHANNEL_STR), currentChannel);
+
+        getActivity().startActivityForResult(intent, requestCode);
     }
 
     @Override
@@ -101,7 +110,7 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
         mRowsAdapter.clear();
 
         if (isEmptyCategory(mType)) {
-            createDefaultRows(getStringById(R.string.dologin_please));
+            createDefaultRows();
             getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
             return;
         }
@@ -133,126 +142,24 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
         }
 
         getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
+
     }
 
-    private class PooqFetchVideoUrlTask extends FetchVideoUrlTask {
-
-        protected Integer doInBackground(Integer... channelIndex) {
-
-            try {
-                getFragmentManager().beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment).commit();
-
-                String authKey = mAuthKey.get(mType);
-                ArrayList<ChannelData> chList = mChannels.get(mType);
-
-                if (authKey == null || authKey.length() < 10)
-                    return Utils.Code.NoAuthKey_err.ordinal();
-
-                int arrIndex = channelIndex[0];
-
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:00");
-                String startTime = sdf.format(new Date());
-
-                Calendar calendar = Calendar.getInstance();
-                calendar.add(Calendar.DAY_OF_YEAR, 1);
-                String endTime = sdf.format(calendar.getTime());
-
-                String url = "https://apis.pooq.co.kr/live/epgs/channels/" + chList.get(arrIndex).getId();
-
-                String resultJson = HttpRequest.get(url, true,
-                        "startdatetime", startTime,
-                        "enddatetime", endTime,
-                        "offset", "0", "limit", "30",
-                        "apikey", getStringById(R.string.POOQ_API_ACCESSKEY_STR),
-                        "credential", "none", "device", "pc",
-                        "partner", "pooq", "pooqzone", "none",
-                        "region", "kor", "targetage", "auto")
-                        .userAgent(getStringById(R.string.USERAGENT))
-                        .body();
-
-                String progInfo = null;
-
-                if (resultJson != null && !resultJson.equals(getStringById(R.string.NULL_STR)) && resultJson.length() != 0) {
-
-                    JsonParser jsonParser = new JsonParser();
-                    JsonElement jsonElement = jsonParser.parse(resultJson);
-
-                    JsonArray array = jsonElement.getAsJsonObject().getAsJsonArray("list");
-
-                    JsonArray progArray = new JsonArray();
-
-                    for (int i = 0; i < array.size(); i++) {
-
-                        String name = array.get(i).getAsJsonObject().get("title").getAsString();
-                        String stime = array.get(i).getAsJsonObject().get("starttime").getAsString();
-                        String etime = array.get(i).getAsJsonObject().get("endtime").getAsString();
-
-                        stime = stime.substring(0, 4) + stime.substring(5, 7) + stime.substring(8, 10) +
-                                stime.substring(11, 13) + stime.substring(14, 16) + "00";
-
-                        etime = etime.substring(0, 4) + etime.substring(5, 7) + etime.substring(8, 10) +
-                                etime.substring(11, 13) + etime.substring(14, 16) + "00";
-
-                        JsonObject item = new JsonObject();
-
-                        item.addProperty("name", name);
-                        item.addProperty("stime", stime);
-                        item.addProperty("etime", etime);
-
-                        progArray.add(item);
-                    }
-
-                    progInfo = progArray.toString();
-                }
-
-                url = getStringById(R.string.POOQ_CHANNEL_URL) + chList.get(arrIndex).getId() + "/" + getStringById(R.string.URL_STR);
-
-                resultJson = HttpRequest.get(url, true,
-                        getStringById(R.string.DEVICETYPEID_STR), getStringById(R.string.PC_STR),
-                        getStringById(R.string.MARKETTYPEID_STR), getStringById(R.string.GENERIC_STR),
-                        getStringById(R.string.POOQ_CREDENTIAL_STR), authKey,
-                        getStringById(R.string.QUALITY_STR), getQualityTag(),
-                        getStringById(R.string.DEVICEMODEID_STR), getStringById(R.string.PC_STR),
-                        getStringById(R.string.AUTHTYPE_STR), getStringById(R.string.URL_STR))
-                        .userAgent(getStringById(R.string.USERAGENT))
-                        .body();
-
-                JsonParser parser = new JsonParser();
-
-                String videoUrl = Utils.removeQuote(parser.parse(resultJson).getAsJsonObject().get(getStringById(R.string.RESULT_STR))
-                        .getAsJsonObject()
-                        .get(getStringById(R.string.SIGNEDURL_STR))
-                        .getAsString());
-
-                if (videoUrl == null || videoUrl.equals(getStringById(R.string.NULL_STR)) || videoUrl.length() == 0) {
-                    return Utils.Code.NoVideoUrl_err.ordinal();
-                }
-
-                setVideoUrlByIndex(Utils.SiteType.Pooq, arrIndex, videoUrl);
-
-                playVideo(chList.get(arrIndex), progInfo);
-
-                return Utils.Code.FetchVideoUrlTask_OK.ordinal();
-            } catch (Exception ex) {
-                return Utils.Code.NoVideoUrl_err.ordinal();
-            } finally {
-
-            }
-        }
-
-        private String getQualityTag() {
-            switch (mQualityType) {
-                case Mobile:
-                    return getStringById(R.string.POOQ_MOBILE_QUALITY_TAG);
-                case SD:
-                    return getStringById(R.string.POOQ_SD_QUALITY_TAG);
-                case HD:
-                    return getStringById(R.string.POOQ_HD_QUALITY_TAG);
-                case FHD:
-                    return getStringById(R.string.POOQ_FHD_QUALITY_TAG);
-            }
-
-            return getStringById(R.string.URLAUTO_STR);
-        }
+    @Override
+    public void refreshRows() {
+        mRowsAdapter.notifyArrayItemRangeChanged(0, mRowsAdapter.size());
     }
+
+    @Override
+    public void sendChannelData() {
+        Intent intent = new Intent(getActivity(), PlayerActivity.class);
+
+        intent.addFlags(FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels.get(mType));
+
+        getActivity().startActivity(intent);
+    }
+
+
 }
+

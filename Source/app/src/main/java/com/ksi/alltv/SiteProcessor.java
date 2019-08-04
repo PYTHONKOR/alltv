@@ -30,8 +30,12 @@ import java.util.ArrayList;
 
 
 public abstract class SiteProcessor {
+
     private Context mContext;
+
     protected String mAuthKey = new String();
+    protected int mQualityType = 0;
+
     protected ArrayList<ChannelData> mChannelDatas = new ArrayList<>();
     protected ArrayList<CategoryData> mCategoryDatas = new ArrayList<>();
 
@@ -52,11 +56,11 @@ public abstract class SiteProcessor {
         mAuthKey = authkey;
     }
 
-    public final String getAppDataString(int resourceId) {
+    public final String getStringById(int resourceId) {
         return mContext.getResources().getString(resourceId);
     }
 
-    public final int getAppDataInt(int resourceId) {
+    public final int getIntById(int resourceId) {
         return mContext.getResources().getInteger(resourceId);
     }
 

@@ -33,6 +33,9 @@ import android.view.ViewGroup;
 import com.squareup.picasso.MemoryPolicy;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
+import java.util.Date;
+
 
 public class CardPresenter extends Presenter {
 
@@ -83,14 +86,44 @@ public class CardPresenter extends Presenter {
 
     @Override
     public void onBindViewHolder(Presenter.ViewHolder viewHolder, Object item) {
+
         ChannelData tvCh = (ChannelData) item;
         ImageCardView cardView = (ImageCardView) viewHolder.view;
 
         Log.d(TAG, "onBindViewHolder");
 
         if (tvCh.getStillImageUrl() != null) {
-            cardView.setTitleText(tvCh.getTitle() + " - " + tvCh.getProgram());
+
+            ArrayList<EPGData> epgData = tvCh.getEPG();
+            Date date = new Date();
+
+            Boolean isAdultContent = false;
+
+            for(int i=0; i<epgData.size(); i++) {
+                if(date.compareTo(epgData.get(i).getEndTime()) < 0) {
+                    tvCh.setProgramName(epgData.get(i).getProgramName());
+                    isAdultContent = epgData.get(i).isAdultContent();
+                    break;
+                }
+            }
+
+            if(tvCh.getProgramName().equals("") || isAdultContent)
+                cardView.setTitleText(tvCh.getTitle());
+            else
+                cardView.setTitleText(tvCh.getTitle() + " - " + tvCh.getProgramName());
+
             cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
+
+            int ret = tvCh.getFavorite();
+
+            if(ret == 0)
+                cardView.setBadgeImage(null);
+            else if(ret == 1)
+                cardView.setBadgeImage(cardView.getResources().getDrawable(R.drawable.star_icon, null));
+            else if(ret == 2)
+                cardView.setBadgeImage(cardView.getResources().getDrawable(R.drawable.oksusu_icon_24, null));
+            else if(ret == 3)
+                cardView.setBadgeImage(cardView.getResources().getDrawable(R.drawable.pooq_icon_24, null));
 
             Picasso.get().load(tvCh.getStillImageUrl())
                     .memoryPolicy(MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE)
@@ -100,10 +133,15 @@ public class CardPresenter extends Presenter {
 
     @Override
     public void onUnbindViewHolder(Presenter.ViewHolder viewHolder) {
+
         Log.d(TAG, "onUnbindViewHolder");
+
         ImageCardView cardView = (ImageCardView) viewHolder.view;
+
         // Remove references to images so that the garbage collector can free up memory
         cardView.setBadgeImage(null);
         cardView.setMainImage(null);
     }
+
 }
+

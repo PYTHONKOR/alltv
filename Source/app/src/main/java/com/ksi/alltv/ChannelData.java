@@ -27,23 +27,47 @@ package com.ksi.alltv;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.ArrayList;
+
 
 public class ChannelData implements Parcelable {
 
     public enum QualityType {Auto, FullHd, Hd, Sd}
 
-    private String mId;
+    private int mSiteType;
+    private int mQualityType;
+    private String mAuthKey = "";
+    private String mId = "";
     private int mCategoryId;
-    private String mTitle;
-    private String mProgram;
-    private String mStillImageUrl;
+    private String mTitle = "";
+    private String mProgramName = "";
+    private String mStillImageUrl = "";
     private String[] mVideoUrl = new String[QualityType.values().length];
     private Boolean mAudioChannel = false;
+    private int mFavorite = 0;
+    private ArrayList<EPGData> mEPG = new ArrayList<>();
 
-    public String getId() {
-        return mId;
+
+    public int getSiteType() { return mSiteType; }
+    public void setSiteType(int type) {
+        this.mSiteType = type;
     }
 
+    public int getQualityType() {
+        return mQualityType;
+    }
+    public void setQualityType(int type) {
+        this.mQualityType = type;
+    }
+
+    public String getAuthkey() {
+        return mAuthKey;
+    }
+    public void setAuthKey(String key) {
+        this.mAuthKey = key;
+    }
+
+    public String getId() { return mId; }
     public void setId(String id) {
         this.mId = id;
     }
@@ -51,37 +75,27 @@ public class ChannelData implements Parcelable {
     public int getCategoryId() {
         return mCategoryId;
     }
-
     public void setCategoryId(int id) {
         this.mCategoryId = id;
     }
 
     public String getTitle() {
-        if (mTitle == null || mTitle.length() == 0)
-            return " ";
-
         return mTitle;
     }
-
     public void setTitle(String title) {
         this.mTitle = title;
     }
 
-    public String getProgram() {
-        if (mProgram == null || mProgram.length() == 0)
-            return " ";
-
-        return mProgram;
+    public String getProgramName() {
+        return mProgramName;
     }
-
-    public void setProgram(String program) {
-        this.mProgram = program;
+    public void setProgramName(String name) {
+        this.mProgramName = name;
     }
 
     public String getVideoUrl() {
         return mVideoUrl[QualityType.Auto.ordinal()];
     }
-
     public void setVideoUrl(String VideoUrl) {
         this.mVideoUrl[QualityType.Auto.ordinal()] = VideoUrl;
     }
@@ -89,7 +103,6 @@ public class ChannelData implements Parcelable {
     public String getStillImageUrl() {
         return mStillImageUrl;
     }
-
     public void setStillImageUrl(String imageUrl) {
         this.mStillImageUrl = imageUrl;
     }
@@ -97,25 +110,62 @@ public class ChannelData implements Parcelable {
     public Boolean isAudioChannel() {
         return mAudioChannel;
     }
+    public void setAudioChannel(Boolean value) {
+        this.mAudioChannel = value;
+    }
 
-    public void setAudioChannel(Boolean setAudio) {
-        this.mAudioChannel = setAudio;
+    public int getFavorite() {
+        return mFavorite;
+    }
+    public void setFavorite(int favorite) {
+        this.mFavorite = favorite;
+    }
+
+    public ArrayList<EPGData> getEPG() {
+        return mEPG;
+    }
+    public void setEPG(ArrayList<EPGData> epg) {
+        if(!this.mEPG.isEmpty()) this.mEPG.clear();
+        this.mEPG = epg;
     }
 
     public ChannelData() {
         //Constructor
     }
 
+    public ChannelData(ChannelData data) {
+        //Constructor
+        this.setSiteType(data.getSiteType());
+        this.setQualityType(data.getQualityType());
+        this.setAuthKey(data.getAuthkey());
+        this.setId(data.getId());
+        this.setCategoryId(data.getCategoryId());
+        this.setTitle(data.getTitle());
+        this.setProgramName(data.getProgramName());
+        this.setStillImageUrl(data.getStillImageUrl());
+        this.setVideoUrl(data.getVideoUrl());
+        this.setAudioChannel(data.isAudioChannel());
+        this.setFavorite(data.getFavorite());
+
+        for(int i=0; i<data.getEPG().size(); i++) {
+            mEPG.add(new EPGData(data.getEPG().get(i)));
+        }
+    }
+
     @Override
     public String toString() {
         return "ChannelData{" +
-                "mId=" + mId +
-                "mCategoryId=" + mCategoryId +
+                "mSiteType=" + Integer.toString(mSiteType) +
+                ", mQualityType=" + Integer.toString(mQualityType) +
+                ", mAuthKey=" + mAuthKey +
+                ", mId=" + mId +
+                ", mCategoryId=" + Integer.toString(mCategoryId) +
                 ", mTitle='" + mTitle + '\'' +
-                ", mProgram='" + mProgram + '\'' +
+                ", mProgramName='" + mProgramName + '\'' +
                 ", mStillImageUrl='" + mStillImageUrl + '\'' +
                 ", mVideoUrl='" + mVideoUrl.toString() + '\'' +
-                "mAudioChannel=" + mAudioChannel +
+                ", mAudioChannel=" + mAudioChannel +
+                ", mFavorite=" + mFavorite +
                 '}';
     }
 
@@ -126,26 +176,38 @@ public class ChannelData implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(this.mSiteType);
+        dest.writeInt(this.mQualityType);
+        dest.writeString(this.mAuthKey);
         dest.writeString(this.mId);
         dest.writeInt(this.mCategoryId);
         dest.writeString(this.mTitle);
-        dest.writeString(this.mProgram);
+        dest.writeString(this.mProgramName);
         dest.writeString(this.mStillImageUrl);
         dest.writeStringArray(this.mVideoUrl);
         dest.writeByte((byte) (this.mAudioChannel ? 1 : 0));
+        dest.writeInt(this.mFavorite);
+        dest.writeList(this.mEPG);
     }
 
+    @SuppressWarnings("unchecked")
     protected ChannelData(Parcel in) {
+        this.mSiteType = in.readInt();
+        this.mQualityType = in.readInt();
+        this.mAuthKey = in.readString();
         this.mId = in.readString();
         this.mCategoryId = in.readInt();
         this.mTitle = in.readString();
-        this.mProgram = in.readString();
+        this.mProgramName = in.readString();
         this.mStillImageUrl = in.readString();
         in.readStringArray(this.mVideoUrl);
-        this.mAudioChannel = in.readByte() != 0;
+        this.mAudioChannel = (in.readByte() != 0);
+        this.mFavorite = in.readInt();
+        this.mEPG = in.readArrayList(EPGData.class.getClassLoader());
     }
 
     public static final Parcelable.Creator<ChannelData> CREATOR = new Parcelable.Creator<ChannelData>() {
+
         public ChannelData createFromParcel(Parcel source) {
             return new ChannelData(source);
         }
@@ -155,3 +217,4 @@ public class ChannelData implements Parcelable {
         }
     };
 }
+

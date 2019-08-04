@@ -25,12 +25,18 @@
 package com.ksi.alltv;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,122 +71,242 @@ public class OksusuSiteProcessor extends SiteProcessor {
         if (mAuthKey == null || mAuthKey.length() == 0)
             doLogin(inSettingsData);
 
-        getLiveTvList();
+        getLiveTvList(inSettingsData);
 
         return true;
     }
 
-    private void getLiveTvList() {
+    private void getLiveTvList(SettingsData inSettingsData) {
+
+        if (mAuthKey == null || mAuthKey.length() == 0)
+            return;
+
+        mQualityType = inSettingsData.mOksusuSettings.mQualityType.ordinal();
 
         try {
-            if (mAuthKey == null || mAuthKey.length() == 0)
+
+            HttpRequest request = HttpRequest.get(getStringById(R.string.OKSUSU_CHANNEL_URL))
+                                .userAgent(getStringById(R.string.USERAGENT))
+                                .header(getStringById(R.string.COOKIE_STR), mAuthKey);
+
+            if(request == null || request.badRequest() || request.isBodyEmpty())
                 return;
 
-            String resultHtml = HttpRequest.get(getAppDataString(R.string.OKSUSU_CHANNEL_URL))
-                    .userAgent(getAppDataString(R.string.USERAGENT))
-                    .body();
-
-            if (resultHtml == null || resultHtml.equals(getAppDataString(R.string.NULL_STR)) || resultHtml.length() == 0)
-                return;
+            String resultJson = request.body();
 
             JsonParser jParser = new JsonParser();
-            JsonArray jArray = jParser.parse(resultHtml).getAsJsonObject().getAsJsonArray(getAppDataString(R.string.CHANNELS_TAG));
+            JsonArray jArray = jParser.parse(resultJson).getAsJsonObject().getAsJsonArray(getStringById(R.string.CHANNELS_TAG));
 
             mChannelDatas.clear();
             mCategoryDatas.clear();
+
+            ArrayList<ChannelData> chList = new ArrayList<>();
 
             // Channels
             for (JsonElement arr : jArray) {
                 JsonObject channelObj = arr.getAsJsonObject();
 
-                if (channelObj.get(getAppDataString(R.string.AUTOURL_TAG)).isJsonNull())
+                if (channelObj.get(getStringById(R.string.AUTOURL_TAG)).isJsonNull())
                     continue;
 
                 ChannelData chData = new ChannelData();
 
-                if (!channelObj.get(getAppDataString(R.string.CHANNELNAME_TAG)).isJsonNull()) {
-                    String channelName = Utils.removeQuote(channelObj.get(getAppDataString(R.string.CHANNELNAME_TAG)).getAsString());
-                    chData.setTitle(channelName);
+                chData.setSiteType(Utils.SiteType.Oksusu.ordinal());
+                chData.setQualityType(mQualityType);
+                chData.setAuthKey(mAuthKey);
+
+                String channelName = Utils.removeQuote(channelObj.get(getStringById(R.string.CHANNELNAME_TAG)).getAsString());
+
+                chData.setTitle(channelName);
+
+                JsonArray programs = channelObj.getAsJsonArray(getStringById(R.string.PROGRAMS_TAG));
+
+                if(programs.size() > 0) {
+                    String programName = Utils.removeQuote(programs.get(0).getAsJsonObject().get(getStringById(R.string.PROGRAMNAME_TAG)).getAsString());
+                    chData.setProgramName(programName);
                 }
 
-                if (!channelObj.getAsJsonArray(getAppDataString(R.string.PROGRAMS_TAG)).isJsonNull()) {
-                    JsonArray programs = channelObj.getAsJsonArray(getAppDataString(R.string.PROGRAMS_TAG));
+                String stillImageUrl = Utils.removeQuote(channelObj.get(getStringById(R.string.STILLIMAGE_TAG)).getAsString());
 
-                    if (programs.size() > 0 && !programs.get(0).getAsJsonObject().get(getAppDataString(R.string.PROGRAMNAME_TAG)).isJsonNull()) {
-                        String programName = Utils.removeQuote(programs.get(0).getAsJsonObject().get(getAppDataString(R.string.PROGRAMNAME_TAG)).getAsString());
-                        chData.setProgram(programName);
-                    }
-                }
-
-                String stillImageUrl = Utils.removeQuote(channelObj.get(getAppDataString(R.string.STILLIMAGE_TAG)).getAsString());
-
-                if (!channelObj.get(getAppDataString(R.string.UNDER19CONTENT_TAG)).getAsBoolean()) {
-                    stillImageUrl = getAppDataString(R.string.OKSUSULOGO_URL) +
-                            Utils.removeQuote(channelObj.get(getAppDataString(R.string.CHANNELIMAGENAME_TAG)).getAsString());
-
-                    chData.setProgram("");
+                if (!channelObj.get(getStringById(R.string.UNDER19CONTENT_TAG)).getAsBoolean()) {
+                    stillImageUrl = getStringById(R.string.OKSUSULOGO_URL) +
+                            Utils.removeQuote(channelObj.get(getStringById(R.string.CHANNELIMAGENAME_TAG)).getAsString());
                 }
 
                 chData.setStillImageUrl(stillImageUrl);
-                chData.setId(Utils.removeQuote(channelObj.get(getAppDataString(R.string.SERVICEID_TAG)).getAsString()));
-                chData.setCategoryId(channelObj.get(getAppDataString(R.string.CHANNELCATEGORY_TAG)).getAsInt());
+                chData.setId(Utils.removeQuote(channelObj.get(getStringById(R.string.SERVICEID_TAG)).getAsString()));
+                chData.setCategoryId(channelObj.get(getStringById(R.string.CHANNELCATEGORY_TAG)).getAsInt());
 
-                mChannelDatas.add(chData);
+                chList.add(chData);
             }
 
             // Category
-            jArray = jParser.parse(resultHtml).getAsJsonObject().getAsJsonArray(getAppDataString(R.string.JSONCATEGORY_TAG));
+            jArray = jParser.parse(resultJson).getAsJsonObject().getAsJsonArray(getStringById(R.string.JSONCATEGORY_TAG));
+
+            int adultCdNo = -1;
 
             for (JsonElement arr : jArray) {
                 JsonObject channelObj = arr.getAsJsonObject();
+                JsonElement cdNo = channelObj.get(getStringById(R.string.CATEGORYNO_TAG));
+                JsonElement cdTitle = channelObj.get(getStringById(R.string.CATEGORYTITLE_TAG));
 
+                if(!cdNo.isJsonNull() && !cdTitle.isJsonNull()) {
+                    if(cdTitle.getAsString().equals(getStringById(R.string.adult))) {
+                        adultCdNo = cdNo.getAsInt();
+                    } else {
+                        CategoryData ctData = new CategoryData();
+                        ctData.setId(cdNo.getAsInt());
+                        ctData.setTitle(Utils.removeQuote(cdTitle.getAsString()));
+                        mCategoryDatas.add(ctData);
+                    }
+                }
+            }
+
+            if(adultCdNo > 0) {
                 CategoryData ctData = new CategoryData();
-
-                ctData.setId(channelObj.get(getAppDataString(R.string.CATEGORYNO_TAG)).getAsInt());
-                ctData.setTitle(Utils.removeQuote(channelObj.get(getAppDataString(R.string.CATEGORYTITLE_TAG)).getAsString()));
-
+                ctData.setId(adultCdNo);
+                ctData.setTitle(getStringById(R.string.adult));
                 mCategoryDatas.add(ctData);
             }
+
+            ArrayList<CategoryData> ctList = mCategoryDatas;
+            Collections.reverse(chList);
+
+            for (CategoryData ctData : ctList) {
+                for (int i = (chList.size() - 1); i >= 0; i--) {
+                    if (ctData.getId() == chList.get(i).getCategoryId()) {
+                        mChannelDatas.add(chList.get(i));
+                        chList.remove(i);
+                    }
+                }
+            }
+
         } catch (Exception ex) {
             mChannelDatas.clear();
             mCategoryDatas.clear();
         } finally {
+            getEPGList();
+        }
+
+    }
+
+    private void getEPGList() {
+
+        Long ts = System.currentTimeMillis();
+        String timestamp = ts.toString();
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHH");
+        String startTime = sdf.format(new Date());
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.HOUR_OF_DAY, 3);
+        String endTime = sdf.format(calendar.getTime());
+
+        // http://www.oksusu.com/api/live/channel?startTime=2019072912&endTime=2019072915&_=1564372401994
+
+        try {
+
+            HttpRequest request = HttpRequest.get(getStringById(R.string.OKSUSU_EPG_URL), true,
+                    "startTime", startTime, "endTime", endTime, "_", timestamp)
+                    .userAgent(getStringById(R.string.USERAGENT));
+
+            if(request == null || request.badRequest() || request.isBodyEmpty())
+                return;
+
+            String resultJson = request.body();
+
+            JsonParser jParser = new JsonParser();
+            JsonArray jArray = jParser.parse(resultJson).getAsJsonObject().getAsJsonArray(getStringById(R.string.CHANNELS_TAG));
+
+            // Channels
+            for (JsonElement arr : jArray) {
+                JsonObject channelObj = arr.getAsJsonObject();
+
+                if (channelObj.get(getStringById(R.string.AUTOURL_TAG)).isJsonNull())
+                    continue;
+
+                String serviceId = Utils.removeQuote(channelObj.get(getStringById(R.string.SERVICEID_TAG)).getAsString());
+
+                ChannelData channelData = null;
+
+                for(int i=0; i<mChannelDatas.size(); i++) {
+                    if(mChannelDatas.get(i).getId().equals(serviceId)) {
+                        channelData = mChannelDatas.get(i);
+                        break;
+                    }
+                }
+
+                if(channelData == null) {
+    //                Log.e(TAG, serviceId + ", " + channelName);
+                    continue;
+                }
+
+                JsonArray programs = channelObj.getAsJsonArray(getStringById(R.string.PROGRAMS_TAG));
+
+                ArrayList<EPGData> epgData = new ArrayList<>();
+
+                for (JsonElement arr1 : programs) {
+                    JsonObject programObj = arr1.getAsJsonObject();
+
+                    String programName;
+                    Boolean adultContent = programObj.get(getStringById(R.string.ADULTCONTENT_TAG)).getAsBoolean();
+
+                    if(adultContent)
+                        programName = getStringById(R.string.adult_contents);
+                    else
+                        programName = Utils.removeHTMLTag(programObj.get(getStringById(R.string.PROGRAMNAME_TAG)).getAsString());
+
+                    String stime = Utils.removeQuote(programObj.get("startTime").getAsString());
+                    String etime = Utils.removeQuote(programObj.get("endTime").getAsString());
+
+                    epgData.add(new EPGData(programName,
+                                new Date(Long.parseLong(stime)),
+                                new Date(Long.parseLong(etime)),
+                                adultContent));
+                }
+
+                channelData.setEPG(epgData);
+            }
+
+        } catch (Exception ex) {
 
         }
+
     }
 
     private void doLogin(SettingsData inSettingsData) {
 
-        try {
-            if (inSettingsData.mOksusuSettings.mId == null || inSettingsData.mOksusuSettings.mPassword == null)
-                return;
+        mAuthKey = "";
+        mQualityType = inSettingsData.mOksusuSettings.mQualityType.ordinal();
 
+        if (inSettingsData.mOksusuSettings.mId == null || inSettingsData.mOksusuSettings.mPassword == null)
+            return;
+
+        try {
             Map<String, String> data = new HashMap<>();
 
-            data.put(getAppDataString(R.string.USERID_STR), inSettingsData.mOksusuSettings.mId);
-            data.put(getAppDataString(R.string.PASSWORD_STR), inSettingsData.mOksusuSettings.mPassword);
-            data.put(getAppDataString(R.string.LOGINMODE_STR), "1");
-            data.put(getAppDataString(R.string.RW_STR), "/");
-            data.put(getAppDataString(R.string.SERVICEPROVIDE_STR), "");
-            data.put(getAppDataString(R.string.ACCESSTOKEN_STR), "");
+            data.put(getStringById(R.string.USERID_STR), inSettingsData.mOksusuSettings.mId);
+            data.put(getStringById(R.string.PASSWORD_STR), inSettingsData.mOksusuSettings.mPassword);
+            data.put(getStringById(R.string.LOGINMODE_STR), "1");
+            data.put(getStringById(R.string.RW_STR), "/");
+            data.put(getStringById(R.string.SERVICEPROVIDE_STR), "");
+            data.put(getStringById(R.string.ACCESSTOKEN_STR), "");
 
-            HttpRequest postRequest = HttpRequest.post(getAppDataString(R.string.OKSUSU_LOGIN_URL))
-                    .userAgent(getAppDataString(R.string.USERAGENT))
+            HttpRequest postRequest = HttpRequest.post(getStringById(R.string.OKSUSU_LOGIN_URL), true)
+                    .userAgent(getStringById(R.string.USERAGENT))
                     .form(data);
 
-            if (postRequest == null || postRequest.isBodyEmpty())
+            if (postRequest == null || postRequest.badRequest() || postRequest.isBodyEmpty())
                 return;
 
-            String receivedCookies = postRequest.header(getAppDataString(R.string.SETCOOKIE_STR));
+            String receivedCookies = postRequest.header(getStringById(R.string.SETCOOKIE_STR));
 
-            if (receivedCookies != null && receivedCookies.startsWith(getAppDataString(R.string.CORNAC_STR))) {
+            if (receivedCookies != null && receivedCookies.startsWith(getStringById(R.string.CORNAC_STR))) {
                 mAuthKey = receivedCookies.substring(receivedCookies
-                        .lastIndexOf(getAppDataString(R.string.CORNAC_STR)), receivedCookies.lastIndexOf(getAppDataString(R.string.DOMAIN_STR)));
+                        .lastIndexOf(getStringById(R.string.CORNAC_STR)), receivedCookies.lastIndexOf(getStringById(R.string.DOMAIN_STR)));
             }
-        } catch (Exception ex) {
+        }  catch (Exception ex) {
             mAuthKey = "";
-        } finally {
-
         }
     }
 }

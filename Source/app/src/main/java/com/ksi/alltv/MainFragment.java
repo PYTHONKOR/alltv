@@ -42,6 +42,7 @@ import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -49,11 +50,20 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.orhanobut.hawk.Hawk;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class MainFragment extends BrowseSupportFragment implements FetchChannelResultReceiver.Receiver,
         OnItemViewClickedListener, OnItemViewSelectedListener {
+
+    private static final String TAG = MainFragment.class.getSimpleName();
 
     private final Handler mHandler = new Handler();
     private PicassoBackgroundManager mPicassoBackgroundManager = null;
@@ -66,9 +76,15 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
     private SpinnerFragment[] mSpinnerFragment = new SpinnerFragment[Utils.SiteType.values().length];
 
-    private Boolean beStarted = false;
-
     private VersionChecker mVersionChecker;
+
+    private Timer mTimer;
+    private String mUpdateTime;
+
+
+    private String getStringById(int resourceId) {
+        return this.getResources().getString(resourceId);
+    }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -99,7 +115,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
             OksusuRowSupportFragment.setQualityType(mSettingsData.mOksusuSettings.mQualityType);
             PooqRowSupportFragment.setQualityType(mSettingsData.mPooqSettings.mQualityType);
 
-        } else if (BuildConfig.DEBUG) {
+        } else if(BuildConfig.DEBUG) {
 
             mSettingsData.mOksusuSettings.mId = getStringById(R.string.OksusuId);
             mSettingsData.mOksusuSettings.mPassword = getStringById(R.string.OksusuPwd);
@@ -139,11 +155,41 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+
+                String now =  new SimpleDateFormat("HH").format(new Date());
+
+//                if(true) {
+                if(now.compareTo(mUpdateTime) != 0) {
+                    mUpdateTime = now;
+                    if (mSettingsData.mOksusuSettings.mId != null && mSettingsData.mOksusuSettings.mId.length() > 0) {
+                        refreshServiceIntent(Utils.SiteType.Oksusu);
+                    }
+
+                    if (mSettingsData.mPooqSettings.mId != null && mSettingsData.mPooqSettings.mId.length() > 0) {
+                        refreshServiceIntent(Utils.SiteType.Pooq);
+                    }
+                } else {
+                    Fragment fragment = getMainFragment();
+                    if (fragment instanceof AllTvBaseRowsSupportFragment) {
+                        ((AllTvBaseRowsSupportFragment) fragment).refreshRows();
+                    }
+                }
+            }
+        };
+
+        mUpdateTime = new SimpleDateFormat("HH").format(new Date());
+
+        mTimer = new Timer();
+//        mTimer.schedule(task, 60 * 1000, 60 * 1000);
+        mTimer.schedule(task, 10 * 60 * 1000, 10 * 60 * 1000);
+
     }
 
     public void startServiceIntent(Utils.SiteType inSiteType) {
-
-        beStarted = true;
 
         mSpinnerFragment[inSiteType.ordinal()] = new SpinnerFragment();
         getFragmentManager().beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment[inSiteType.ordinal()]).commit();
@@ -159,18 +205,16 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
         serviceIntent.putExtra(getStringById(R.string.AUTHKEY_STR), "");
 
         getActivity().startService(serviceIntent);
-
     }
 
     public void refreshServiceIntent(Utils.SiteType inSiteType) {
 
-        if (beStarted) {
-            beStarted = false;
-            return;
+        if(!PlayerActivity.active) {
+            mSpinnerFragment[inSiteType.ordinal()] = new SpinnerFragment();
+            getFragmentManager().beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment[inSiteType.ordinal()]).commit();
+        } else {
+            mSpinnerFragment[inSiteType.ordinal()] = null;
         }
-
-        mSpinnerFragment[inSiteType.ordinal()] = new SpinnerFragment();
-        getFragmentManager().beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment[inSiteType.ordinal()]).commit();
 
         // Start Service Intent
         Intent serviceIntent = new Intent(getActivity(), FetchChannelService.class);
@@ -184,23 +228,21 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
         serviceIntent.putExtra(getStringById(R.string.AUTHKEY_STR), authkey);
 
         getActivity().startService(serviceIntent);
-
     }
 
     public class PageRowFragmentFactory extends BrowseSupportFragment.FragmentFactory<Fragment> {
 
         @Override
         public Fragment createFragment(Object rowObj) {
+
             Row row = (Row) rowObj;
 
-            if (row.getHeaderItem().getId() == Utils.Header.Oksusu.ordinal()) {
-                Fragment fragment = new OksusuRowSupportFragment();
-                refreshServiceIntent(Utils.SiteType.Oksusu);
-                return fragment;
+            if(row.getHeaderItem().getId() == Utils.Header.Favorite.ordinal()) {
+                return new FavoriteRowSupportFragment();
+            } else if (row.getHeaderItem().getId() == Utils.Header.Oksusu.ordinal()) {
+                return new OksusuRowSupportFragment();
             } else if (row.getHeaderItem().getId() == Utils.Header.Pooq.ordinal()) {
-                Fragment fragment = new PooqRowSupportFragment();
-                refreshServiceIntent(Utils.SiteType.Pooq);
-                return fragment;
+                return new PooqRowSupportFragment();
             }
 
             throw new IllegalArgumentException(String.format("Invalid row %s", rowObj));
@@ -218,6 +260,12 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
     }
 
     public void createDefaultRows() {
+
+        //Favorite
+        HeaderItem favoriteHeader = new HeaderItem(Utils.Header.Favorite.ordinal(),
+                getStringById(R.string.favorite));
+        mCategoryRowAdapter.add(new PageRow(favoriteHeader));
+
         //Oksusu
         HeaderItem oksusuHeader = new HeaderItem(Utils.Header.Oksusu.ordinal(),
                 getStringById(R.string.oksusu));
@@ -250,7 +298,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
         setOnSearchClickedListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (BuildConfig.DEBUG) {
+                if(BuildConfig.DEBUG) {
                     new Thread(new Runnable() {
                         public void run() {
                             new Instrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
@@ -261,10 +309,6 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
                 }
             }
         });
-    }
-
-    private String getStringById(int resourceId) {
-        return getResources().getString(resourceId);
     }
 
     @Override
@@ -298,17 +342,19 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
     // GridItemPresenter
     private class GridItemPresenter extends Presenter {
+
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent) {
+
             TextView view = new TextView(parent.getContext());
-            view.setLayoutParams(new ViewGroup.LayoutParams(
-                    getResources().getInteger(R.integer.GRID_ITEM_WIDTH),
-                    getResources().getInteger(R.integer.GRID_ITEM_HEIGHT)));
+
+            view.setLayoutParams(new ViewGroup.LayoutParams(getResources().getInteger(R.integer.GRID_ITEM_WIDTH), getResources().getInteger(R.integer.GRID_ITEM_HEIGHT)));
             view.setFocusable(true);
             view.setFocusableInTouchMode(true);
             view.setBackgroundColor(ContextCompat.getColor(getContext(), R.color.default_background));
             view.setTextColor(Color.WHITE);
             view.setGravity(Gravity.CENTER);
+
             return new ViewHolder(view);
         }
 
@@ -319,6 +365,7 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
         @Override
         public void onUnbindViewHolder(ViewHolder viewHolder) {
+
         }
     }
 
@@ -326,21 +373,56 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
     public void onReceiveResult(int resultCode, Bundle resultData) {
 
         Utils.SiteType siteType = (Utils.SiteType) resultData.get(getStringById(R.string.SITETYPE_STR));
+        ArrayList<ChannelData> chList;
 
-        if (mSpinnerFragment[siteType.ordinal()] != null)
+        if(!PlayerActivity.active && mSpinnerFragment[siteType.ordinal()] != null) {
             getFragmentManager().beginTransaction().remove(mSpinnerFragment[siteType.ordinal()]).commit();
+            mSpinnerFragment[siteType.ordinal()] = null;
+        }
 
         switch (Utils.Code.values()[resultCode]) {
             case ServiceIntent_OK:
                 if (resultData != null) {
                     switch (siteType) {
+
                         case Oksusu:
-                            OksusuRowSupportFragment.setChannelList(resultData.getParcelableArrayList(getStringById(R.string.OKSUSU_CHANNELS_STR)));
+
+                            chList = resultData.getParcelableArrayList(getStringById(R.string.OKSUSU_CHANNELS_STR));
+
+                            if (Hawk.contains(getStringById(R.string.OKSUSU_CHANNELS_STR))) {
+
+                                String str = Hawk.get(getStringById(R.string.OKSUSU_CHANNELS_STR));
+                                ArrayList<String> favorites = mGson.fromJson(str,
+                                        new TypeToken<ArrayList<String>>() {}.getType());
+
+                                for(ChannelData chData : chList) {
+                                    for (String val : favorites)
+                                        if (val.contains(chData.getId())) chData.setFavorite(1);
+                                }
+                            }
+
+                            OksusuRowSupportFragment.setChannelList(chList);
                             OksusuRowSupportFragment.setCategoryList(resultData.getParcelableArrayList(getStringById(R.string.OKSUSU_CATEGORY_STR)));
                             OksusuRowSupportFragment.setAuthKey(resultData.getString(getStringById(R.string.OKSUSUAUTHKEY_STR)));
                             break;
+
                         case Pooq:
-                            PooqRowSupportFragment.setChannelList(resultData.getParcelableArrayList(getStringById(R.string.POOQ_CHANNELS_STR)));
+
+                            chList = resultData.getParcelableArrayList(getStringById(R.string.POOQ_CHANNELS_STR));
+
+                            if (Hawk.contains(getStringById(R.string.POOQ_CHANNELS_STR))) {
+
+                                String str = Hawk.get(getStringById(R.string.POOQ_CHANNELS_STR));
+                                ArrayList<String> favorites = mGson.fromJson(str,
+                                        new TypeToken<ArrayList<String>>() {}.getType());
+
+                                for(ChannelData chData : chList) {
+                                    for (String val : favorites)
+                                        if (val.contains(chData.getId())) chData.setFavorite(1);
+                                }
+                            }
+
+                            PooqRowSupportFragment.setChannelList(chList);
                             PooqRowSupportFragment.setCategoryList(resultData.getParcelableArrayList(getStringById(R.string.POOQ_CATEGORY_STR)));
                             PooqRowSupportFragment.setAuthKey(resultData.getString(getStringById(R.string.POOQAUTHKEY_STR)));
                             break;
@@ -348,40 +430,45 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
 
                     Fragment fragment = getMainFragment();
 
-                    if (fragment instanceof AllTvBaseRowsSupportFragment) {
-                        ((AllTvBaseRowsSupportFragment) fragment).createRows();
+                    if(siteType == Utils.SiteType.Oksusu && fragment instanceof OksusuRowSupportFragment) {
+                        if(PlayerActivity.active)
+                            ((OksusuRowSupportFragment) fragment).sendChannelData();
+                        else
+                            ((OksusuRowSupportFragment) fragment).createRows();
+                    } else if(siteType == Utils.SiteType.Pooq && fragment instanceof PooqRowSupportFragment) {
+                        if(PlayerActivity.active)
+                            ((PooqRowSupportFragment) fragment).sendChannelData();
+                        else
+                            ((PooqRowSupportFragment) fragment).createRows();
+                    } else if(siteType == Utils.SiteType.Pooq && fragment instanceof FavoriteRowSupportFragment) {
+                        if(PlayerActivity.active)
+                            ((FavoriteRowSupportFragment) fragment).sendChannelData();
+                        else
+                            ((FavoriteRowSupportFragment) fragment).createRows();
                     }
 
-                    if (!Hawk.put(getStringById(R.string.SETTINGS_STR), mGson.toJson(mSettingsData))) {
-                        Utils.showToast(getContext(), R.string.settingssave_error);
-                        return;
-                    }
                 }
                 break;
 
             case ServiceIntent_Fail:
                 switch (siteType) {
                     case Oksusu:
-                        if (mSettingsData.mOksusuSettings.mId != null && mSettingsData.mOksusuSettings.mId.length() > 0)
-                            Utils.showToast(getContext(), R.string.oksusu_login_fail);
+                        Utils.showToast(getContext(), R.string.oksusu_login_fail);
                         break;
                     case Pooq:
-                        if (mSettingsData.mPooqSettings.mId != null && mSettingsData.mPooqSettings.mId.length() > 0)
-                            Utils.showToast(getContext(), R.string.pooq_login_fail);
+                        Utils.showToast(getContext(), R.string.pooq_login_fail);
+                        break;
                 }
-
-                Fragment fragment = getMainFragment();
-
-                if (fragment instanceof AllTvBaseRowsSupportFragment) {
-                    ((AllTvBaseRowsSupportFragment) fragment).createDefaultRows(getStringById(R.string.dologin_please));
-                }
-
                 break;
         }
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        ArrayList<ChannelData> chList;
+        ArrayList<String> favorites = new ArrayList<String>();
+        Fragment fragment;
 
         switch (Utils.Code.values()[requestCode]) {
             case SettingsRequestCode:
@@ -399,13 +486,102 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
                     PooqRowSupportFragment.setQualityType(mSettingsData.mPooqSettings.mQualityType);
                     startServiceIntent(Utils.SiteType.Pooq);
                 }
+
+                if (!Hawk.put(getStringById(R.string.SETTINGS_STR), mGson.toJson(mSettingsData))) {
+                    Utils.showToast(getContext(), R.string.settingssave_error);
+                    return;
+                }
+
+                break;
+
+            case OksusuPlay:
+                if(resultCode == -1) {
+                    chList = data.getParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG));
+
+                    favorites.clear();
+                    for (int i = 0; i < chList.size(); i++) {
+                        ChannelData chData = chList.get(i);
+                        if (chData.getFavorite() > 0) favorites.add(chData.getId());
+                    }
+                    if (!Hawk.put(getStringById(R.string.OKSUSU_CHANNELS_STR), mGson.toJson(favorites))) {
+                        return;
+                    }
+
+                    OksusuRowSupportFragment.updateFavoriteList(favorites);
+                }
+
+                fragment = getMainFragment();
+                if(fragment instanceof AllTvBaseRowsSupportFragment)
+                    ((AllTvBaseRowsSupportFragment) fragment).createRows();
+
+                break;
+
+            case PooqPlay:
+                if(resultCode == -1) {
+                    chList = data.getParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG));
+
+                    favorites.clear();
+                    for (int i = 0; i < chList.size(); i++) {
+                        ChannelData chData = chList.get(i);
+                        if (chData.getFavorite() > 0) favorites.add(chData.getId());
+                    }
+                    if (!Hawk.put(getStringById(R.string.POOQ_CHANNELS_STR), mGson.toJson(favorites))) {
+                        return;
+                    }
+
+                    PooqRowSupportFragment.updateFavoriteList(favorites);
+                }
+
+                fragment = getMainFragment();
+                if(fragment instanceof AllTvBaseRowsSupportFragment)
+                    ((AllTvBaseRowsSupportFragment) fragment).createRows();
+
+                break;
+
+            case FavoritePlay:
+                if(resultCode == -1) {
+                    chList = data.getParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG));
+
+                    favorites.clear();
+                    for (int i = 0; i < chList.size(); i++) {
+                        ChannelData chData = chList.get(i);
+                        if (chData.getSiteType() == Utils.SiteType.Oksusu.ordinal() && chData.getFavorite() > 0)
+                            favorites.add(chData.getId());
+                    }
+
+                    OksusuRowSupportFragment.updateFavoriteList(favorites);
+
+                    if (!Hawk.put(getStringById(R.string.OKSUSU_CHANNELS_STR), mGson.toJson(favorites))) {
+                        return;
+                    }
+
+                    favorites.clear();
+                    for (int i = 0; i < chList.size(); i++) {
+                        ChannelData chData = chList.get(i);
+                        if (chData.getSiteType() == Utils.SiteType.Pooq.ordinal() && chData.getFavorite() > 0)
+                            favorites.add(chData.getId());
+                    }
+
+                    PooqRowSupportFragment.updateFavoriteList(favorites);
+
+                    if (!Hawk.put(getStringById(R.string.POOQ_CHANNELS_STR), mGson.toJson(favorites))) {
+                        return;
+                    }
+                }
+
+                fragment = getMainFragment();
+                if(fragment instanceof AllTvBaseRowsSupportFragment) {
+                    ((AllTvBaseRowsSupportFragment) fragment).createRows();
+                }
+
                 break;
         }
     }
 
     private void showLicensesDialogFragment() {
-        LicensesDialogFragment dialog = LicensesDialogFragment.newInstance();
 
+        LicensesDialogFragment dialog = LicensesDialogFragment.newInstance();
         dialog.show(getActivity().getSupportFragmentManager(), getStringById(R.string.LICENSESDIALOG_STR));
+
     }
 }
