@@ -95,8 +95,8 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         setContentView(R.layout.activity_videoplayer);
 
-        mPlayerView = (PlayerView)findViewById(R.id.video_view);
-        mProgressBar = (ProgressBar)findViewById(R.id.progressBar);
+        mPlayerView = (PlayerView) findViewById(R.id.video_view);
+        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         mProgressBar.setVisibility(View.VISIBLE);
 
@@ -111,7 +111,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         createPlayer();
 
-        if(BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG) {
             mPlayerView.setOnTouchListener(new View.OnTouchListener() {
 
                 @Override
@@ -119,26 +119,26 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
                     float left, right, top, bottom;
 
-                    left  = (float) (mWindowSize.x * 0.1);
+                    left = (float) (mWindowSize.x * 0.1);
                     right = (float) (mWindowSize.x * 0.9);
                     top = left;
-                    bottom = (float)(mWindowSize.y - top);
+                    bottom = (float) (mWindowSize.y - top);
 
 //                    Log.e(TAG, "onCreate: " + Float.toString(left) + ", " + Float.toString(right));
 //                    Log.e(TAG, "motionEvent: " + Float.toString(motionEvent.getX()) + ", " + Float.toString(motionEvent.getY()));
 
-                    if(motionEvent.getX() < left) {
+                    if (motionEvent.getX() < left) {
                         if (motionEvent.getY() < top) {
                             Intent intent = new Intent();
                             intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels);
-                            if( isSaveNeeded )
+                            if (isSaveNeeded)
                                 setResult(RESULT_OK, intent);
                             else
                                 setResult(RESULT_CANCELED, intent);
                             finishAfterTransition();
                         } else if (mSlidingPanel.isPanelShow() && motionEvent.getY() > bottom) {
-                            if(mEPGIndex >= 0) {
-                                if(mEPGIndex > 0) mEPGIndex -= 1;
+                            if (mEPGIndex >= 0) {
+                                if (mEPGIndex > 0) mEPGIndex -= 1;
                                 displayProgramInfo(3000);
                             }
                         } else {
@@ -152,12 +152,12 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                                         Toast.LENGTH_SHORT).show();
                             }
                         }
-                    } else if(motionEvent.getX() > right) {
+                    } else if (motionEvent.getX() > right) {
                         if (mSlidingPanel.isPanelShow() && motionEvent.getY() > bottom) {
 
-                            if(mEPGIndex >= 0) {
-                                int size = mChannels.get(mChannelIndex).getEPG().size()-1;
-                                if(mEPGIndex < size) mEPGIndex += 1;
+                            if (mEPGIndex >= 0) {
+                                int size = mChannels.get(mChannelIndex).getEPG().size() - 1;
+                                if (mEPGIndex < size) mEPGIndex += 1;
                                 displayProgramInfo(3000);
                             }
 
@@ -173,10 +173,10 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                             }
                         }
                     } else {
-                        if(mSlidingPanel.isPanelShow()) {
-                            if( motionEvent.getY() > bottom) {
+                        if (mSlidingPanel.isPanelShow()) {
+                            if (motionEvent.getY() > bottom) {
 
-                                if(mCurrentChannel != mChannelIndex) {
+                                if (mCurrentChannel != mChannelIndex) {
                                     return false;
                                 }
 
@@ -196,8 +196,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                             } else {
                                 mSlidingPanel.hideSlidingPanel();
                             }
-                        }
-                        else {
+                        } else {
                             showProgramInfo(3000);
                         }
                     }
@@ -228,12 +227,12 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
 
             if (mSlidingPanel.isPanelShow()) {
-                if( isLongPressed ) {
+                if (isLongPressed) {
                     isLongPressed = false;
                 } else {
                     mSlidingPanel.hideSlidingPanel();
 
-                    if(mCurrentChannel != mChannelIndex) {
+                    if (mCurrentChannel != mChannelIndex) {
                         mCurrentChannel = mChannelIndex;
                         mProgressBar.setVisibility(View.VISIBLE);
                         new FetchVideoUrlTask().execute(mCurrentChannel);
@@ -252,15 +251,15 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
 
-            if( event.isLongPress() ) {
+            if (event.isLongPress()) {
 
                 isLongPressed = true;
 
-                if(!mSlidingPanel.isPanelShow()) {
+                if (!mSlidingPanel.isPanelShow()) {
                     showProgramInfo(3000);
                 }
 
-                if(mCurrentChannel != mChannelIndex) {
+                if (mCurrentChannel != mChannelIndex) {
                     return false;
                 }
 
@@ -284,8 +283,8 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                 mSlidingPanel.closeDelayed(3000);
             }
 
-        } else if(keyCode == KeyEvent.KEYCODE_BACK) {
-            if(mSlidingPanel.isPanelShow()) {
+        } else if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if (mSlidingPanel.isPanelShow()) {
                 mSlidingPanel.hideSlidingPanel();
                 return false;
             } else {
@@ -293,7 +292,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                 Intent intent = new Intent();
                 intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels);
 
-                if( isSaveNeeded )
+                if (isSaveNeeded)
                     setResult(RESULT_OK, intent);
                 else
                     setResult(RESULT_CANCELED, intent);
@@ -301,10 +300,10 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                 finishAfterTransition();
             }
 
-        } else if(keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+        } else if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
 
-            if(mSlidingPanel.isPanelShow()) {
-                if(mChannelIndex < mChannels.size()-1)
+            if (mSlidingPanel.isPanelShow()) {
+                if (mChannelIndex < mChannels.size() - 1)
                     mChannelIndex += 1;
                 else
                     mChannelIndex = 0;
@@ -312,13 +311,13 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                 ChannelData chData = mChannels.get(mChannelIndex);
                 ArrayList<EPGData> epgData = chData.getEPG();
 
-                if(epgData.size() == 0) mEPGIndex = -1;
-                else if(mEPGIndex < 0)  mEPGIndex = 0;
-                else if(mEPGIndex > epgData.size()-1) mEPGIndex = epgData.size()-1;
+                if (epgData.size() == 0) mEPGIndex = -1;
+                else if (mEPGIndex < 0) mEPGIndex = 0;
+                else if (mEPGIndex > epgData.size() - 1) mEPGIndex = epgData.size() - 1;
 
                 displayProgramInfo(3000);
             } else {
-                if(mCurrentChannel < mChannels.size()-1) {
+                if (mCurrentChannel < mChannels.size() - 1) {
                     mCurrentChannel += 1;
                     mSlidingPanel.hideSlidingPanel();
                     mProgressBar.setVisibility(View.VISIBLE);
@@ -329,23 +328,23 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                 }
             }
 
-        } else if(keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
-            if(mSlidingPanel.isPanelShow()) {
-                if(mChannelIndex > 0)
+        } else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+            if (mSlidingPanel.isPanelShow()) {
+                if (mChannelIndex > 0)
                     mChannelIndex -= 1;
                 else
-                    mChannelIndex = mChannels.size()-1;
+                    mChannelIndex = mChannels.size() - 1;
 
                 ChannelData chData = mChannels.get(mChannelIndex);
                 ArrayList<EPGData> epgData = chData.getEPG();
 
-                if(epgData.size() == 0) mEPGIndex = -1;
-                else if(mEPGIndex < 0)  mEPGIndex = 0;
-                else if(mEPGIndex > epgData.size()-1) mEPGIndex = epgData.size()-1;
+                if (epgData.size() == 0) mEPGIndex = -1;
+                else if (mEPGIndex < 0) mEPGIndex = 0;
+                else if (mEPGIndex > epgData.size() - 1) mEPGIndex = epgData.size() - 1;
 
                 displayProgramInfo(3000);
             } else {
-                if(mCurrentChannel > 0) {
+                if (mCurrentChannel > 0) {
                     mCurrentChannel -= 1;
                     mSlidingPanel.hideSlidingPanel();
                     mProgressBar.setVisibility(View.VISIBLE);
@@ -356,20 +355,20 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                 }
             }
 
-        } else if(keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+        } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
 
-            if(mSlidingPanel.isPanelShow()) {
-                if(mEPGIndex >= 0) {
+            if (mSlidingPanel.isPanelShow()) {
+                if (mEPGIndex >= 0) {
                     if (mEPGIndex > 0) mEPGIndex -= 1;
                 }
                 displayProgramInfo(3000);
             }
 
-        } else if(keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+        } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
 
-            if(mSlidingPanel.isPanelShow()) {
-                if(mEPGIndex >= 0) {
-                    int size = mChannels.get(mChannelIndex).getEPG().size()-1;
+            if (mSlidingPanel.isPanelShow()) {
+                if (mEPGIndex >= 0) {
+                    int size = mChannels.get(mChannelIndex).getEPG().size() - 1;
                     if (mEPGIndex < size) mEPGIndex += 1;
                 }
                 displayProgramInfo(3000);
@@ -390,7 +389,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
     private void showProgramInfo(int msec) {
 
-        if(mSlidingPanel.isPanelShow()) return;
+        if (mSlidingPanel.isPanelShow()) return;
 
         mChannelIndex = mCurrentChannel;
 
@@ -399,9 +398,9 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         mEPGIndex = -1;
 
-        for(int i=0; i<epgData.size(); i++) {
+        for (int i = 0; i < epgData.size(); i++) {
             Date now = new Date();
-            if(now.compareTo(epgData.get(i).getEndTime()) < 0) {
+            if (now.compareTo(epgData.get(i).getEndTime()) < 0) {
                 mEPGIndex = i;
                 break;
             }
@@ -419,7 +418,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         String title = chData.getTitle();
 
-        if(mEPGIndex >= 0) {
+        if (mEPGIndex >= 0) {
             String name = epgData.get(mEPGIndex).getProgramName();
             Date stime = epgData.get(mEPGIndex).getStartTime();
             Date etime = epgData.get(mEPGIndex).getEndTime();
@@ -435,13 +434,13 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         String currentTime = new SimpleDateFormat("HH:mm").format(new Date());
         mSlidingPanel.setTimeText(currentTime);
 
-        if(chData.getFavorite() > 0) {
+        if (chData.getFavorite() > 0) {
             mSlidingPanel.showFavorite();
         } else {
             mSlidingPanel.hideFavorite();
         }
 
-        if(msec > 0)
+        if (msec > 0)
             mSlidingPanel.closeDelayed(msec);
 
     }
@@ -470,7 +469,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         ChannelData chData = mChannels.get(mCurrentChannel);
 
-        if ( chData.isAudioChannel() ) {
+        if (chData.isAudioChannel()) {
             Picasso.get().load(chData.getStillImageUrl()).into(this);
         }
 
@@ -529,7 +528,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
     @Override
     public void onLoadingChanged(boolean isLoading) {
 
-        if( isLoading )
+        if (isLoading)
             showProgramInfo(1000);
 
     }
@@ -586,9 +585,9 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
             ChannelData chData = chList.get(arrIndex);
 
-            if(chData.getSiteType() == Utils.SiteType.Oksusu.ordinal()) {
+            if (chData.getSiteType() == Utils.SiteType.Oksusu.ordinal()) {
                 return OksusuFetchVideoUrl(chData);
-            } else if(chData.getSiteType() == Utils.SiteType.Pooq.ordinal()) {
+            } else if (chData.getSiteType() == Utils.SiteType.Pooq.ordinal()) {
                 return PooqFetchVideoUrl(chData);
             }
 
@@ -635,7 +634,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                         .userAgent("Mozilla/4.0")
                         .header(getStringById(R.string.COOKIE_STR), authKey);
 
-                if(request == null || request.badRequest() || request.isBodyEmpty()) {
+                if (request == null || request.badRequest() || request.isBodyEmpty()) {
                     return Utils.Code.NoVideoUrl_err.ordinal();
                 }
 
@@ -717,7 +716,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
             int siteType = chData.getSiteType();
             int qualityType = chData.getQualityType();
 
-            if(siteType == Utils.SiteType.Oksusu.ordinal()) {
+            if (siteType == Utils.SiteType.Oksusu.ordinal()) {
 
                 switch (SettingsData.OksusuQualityType.values()[qualityType]) {
                     case AUTO:

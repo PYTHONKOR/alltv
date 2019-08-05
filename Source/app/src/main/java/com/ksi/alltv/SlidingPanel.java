@@ -23,44 +23,52 @@ public class SlidingPanel {
 
     public SlidingPanel(Activity activity) {
 
-        slidingPanel = (LinearLayout)activity.findViewById(R.id.slidingPanel);
-        infoView = (TextView)activity.findViewById(R.id.infoView);
-        timeView = (TextView)activity.findViewById(R.id.timeView);
-        favoriteView = (ImageView)activity.findViewById(R.id.favoriteView);
+        slidingPanel = (LinearLayout) activity.findViewById(R.id.slidingPanel);
+        infoView = (TextView) activity.findViewById(R.id.infoView);
+        timeView = (TextView) activity.findViewById(R.id.timeView);
+        favoriteView = (ImageView) activity.findViewById(R.id.favoriteView);
 
         translateTopAnim = AnimationUtils.loadAnimation(activity, R.anim.translate_top);
         translateBottomAnim = AnimationUtils.loadAnimation(activity, R.anim.translate_bottom);
 
         translateTopAnim.setAnimationListener(new Animation.AnimationListener() {
             @Override
-            public void onAnimationStart(Animation animation) { }
+            public void onAnimationStart(Animation animation) {
+            }
+
             @Override
             public void onAnimationEnd(Animation animation) {
-                if(isPanelShow) {
+                if (isPanelShow) {
                     slidingPanel.setVisibility(View.INVISIBLE);
-                    isPanelShow=false;
+                    isPanelShow = false;
                 } else {
-                    isPanelShow=true;
+                    isPanelShow = true;
                 }
             }
+
             @Override
-            public void onAnimationRepeat(Animation animation) { }
+            public void onAnimationRepeat(Animation animation) {
+            }
         });
 
         translateBottomAnim.setAnimationListener(new Animation.AnimationListener() {
             @Override
-            public void onAnimationStart(Animation animation) { }
+            public void onAnimationStart(Animation animation) {
+            }
+
             @Override
             public void onAnimationEnd(Animation animation) {
-                if(isPanelShow) {
+                if (isPanelShow) {
                     slidingPanel.setVisibility(View.INVISIBLE);
-                    isPanelShow=false;
+                    isPanelShow = false;
                 } else {
-                    isPanelShow=true;
+                    isPanelShow = true;
                 }
             }
+
             @Override
-            public void onAnimationRepeat(Animation animation) { }
+            public void onAnimationRepeat(Animation animation) {
+            }
         });
 
         mHandler = new Handler();
@@ -82,7 +90,7 @@ public class SlidingPanel {
 
     public void hideSlidingPanel() {
 
-        if(!isPanelShow) return;
+        if (!isPanelShow) return;
 
         slidingPanel.startAnimation(translateBottomAnim);
         slidingPanel.setVisibility(View.GONE);
@@ -114,5 +122,4 @@ public class SlidingPanel {
     public void setTimeText(String text) {
         timeView.setText(text);
     }
-
 }

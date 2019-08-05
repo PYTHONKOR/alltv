@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
-* Copyright (c) 2019 PYTHONKOR
+ * Copyright (c) 2019 PYTHONKOR
 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -146,14 +146,14 @@ public class Utils {
     }
 
     public static String removeQuote(String removeStr) {
-        if(removeStr == null || removeStr.isEmpty())
+        if (removeStr == null || removeStr.isEmpty())
             return null;
         return removeStr.replace("\"", "");
     }
 
     public static String removeHTMLTag(String str) {
 
-        if(str == null || str.isEmpty())
+        if (str == null || str.isEmpty())
             return null;
 
         String returnStr = str;

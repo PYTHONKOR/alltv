@@ -86,10 +86,10 @@ public class OksusuSiteProcessor extends SiteProcessor {
         try {
 
             HttpRequest request = HttpRequest.get(getStringById(R.string.OKSUSU_CHANNEL_URL))
-                                .userAgent(getStringById(R.string.USERAGENT))
-                                .header(getStringById(R.string.COOKIE_STR), mAuthKey);
+                    .userAgent(getStringById(R.string.USERAGENT))
+                    .header(getStringById(R.string.COOKIE_STR), mAuthKey);
 
-            if(request == null || request.badRequest() || request.isBodyEmpty())
+            if (request == null || request.badRequest() || request.isBodyEmpty())
                 return;
 
             String resultJson = request.body();
@@ -121,7 +121,7 @@ public class OksusuSiteProcessor extends SiteProcessor {
 
                 JsonArray programs = channelObj.getAsJsonArray(getStringById(R.string.PROGRAMS_TAG));
 
-                if(programs.size() > 0) {
+                if (programs.size() > 0) {
                     String programName = Utils.removeQuote(programs.get(0).getAsJsonObject().get(getStringById(R.string.PROGRAMNAME_TAG)).getAsString());
                     chData.setProgramName(programName);
                 }
@@ -150,8 +150,8 @@ public class OksusuSiteProcessor extends SiteProcessor {
                 JsonElement cdNo = channelObj.get(getStringById(R.string.CATEGORYNO_TAG));
                 JsonElement cdTitle = channelObj.get(getStringById(R.string.CATEGORYTITLE_TAG));
 
-                if(!cdNo.isJsonNull() && !cdTitle.isJsonNull()) {
-                    if(cdTitle.getAsString().equals(getStringById(R.string.adult))) {
+                if (!cdNo.isJsonNull() && !cdTitle.isJsonNull()) {
+                    if (cdTitle.getAsString().equals(getStringById(R.string.adult))) {
                         adultCdNo = cdNo.getAsInt();
                     } else {
                         CategoryData ctData = new CategoryData();
@@ -162,7 +162,7 @@ public class OksusuSiteProcessor extends SiteProcessor {
                 }
             }
 
-            if(adultCdNo > 0) {
+            if (adultCdNo > 0) {
                 CategoryData ctData = new CategoryData();
                 ctData.setId(adultCdNo);
                 ctData.setTitle(getStringById(R.string.adult));
@@ -210,7 +210,7 @@ public class OksusuSiteProcessor extends SiteProcessor {
                     "startTime", startTime, "endTime", endTime, "_", timestamp)
                     .userAgent(getStringById(R.string.USERAGENT));
 
-            if(request == null || request.badRequest() || request.isBodyEmpty())
+            if (request == null || request.badRequest() || request.isBodyEmpty())
                 return;
 
             String resultJson = request.body();
@@ -229,15 +229,15 @@ public class OksusuSiteProcessor extends SiteProcessor {
 
                 ChannelData channelData = null;
 
-                for(int i=0; i<mChannelDatas.size(); i++) {
-                    if(mChannelDatas.get(i).getId().equals(serviceId)) {
+                for (int i = 0; i < mChannelDatas.size(); i++) {
+                    if (mChannelDatas.get(i).getId().equals(serviceId)) {
                         channelData = mChannelDatas.get(i);
                         break;
                     }
                 }
 
-                if(channelData == null) {
-    //                Log.e(TAG, serviceId + ", " + channelName);
+                if (channelData == null) {
+                    //                Log.e(TAG, serviceId + ", " + channelName);
                     continue;
                 }
 
@@ -251,7 +251,7 @@ public class OksusuSiteProcessor extends SiteProcessor {
                     String programName;
                     Boolean adultContent = programObj.get(getStringById(R.string.ADULTCONTENT_TAG)).getAsBoolean();
 
-                    if(adultContent)
+                    if (adultContent)
                         programName = getStringById(R.string.adult_contents);
                     else
                         programName = Utils.removeHTMLTag(programObj.get(getStringById(R.string.PROGRAMNAME_TAG)).getAsString());
@@ -260,9 +260,9 @@ public class OksusuSiteProcessor extends SiteProcessor {
                     String etime = Utils.removeQuote(programObj.get("endTime").getAsString());
 
                     epgData.add(new EPGData(programName,
-                                new Date(Long.parseLong(stime)),
-                                new Date(Long.parseLong(etime)),
-                                adultContent));
+                            new Date(Long.parseLong(stime)),
+                            new Date(Long.parseLong(etime)),
+                            adultContent));
                 }
 
                 channelData.setEPG(epgData);
@@ -305,7 +305,7 @@ public class OksusuSiteProcessor extends SiteProcessor {
                 mAuthKey = receivedCookies.substring(receivedCookies
                         .lastIndexOf(getStringById(R.string.CORNAC_STR)), receivedCookies.lastIndexOf(getStringById(R.string.DOMAIN_STR)));
             }
-        }  catch (Exception ex) {
+        } catch (Exception ex) {
             mAuthKey = "";
         }
     }

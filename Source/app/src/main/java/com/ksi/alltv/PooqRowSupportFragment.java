@@ -83,7 +83,8 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
     public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item,
                               RowPresenter.ViewHolder rowViewHolder, Row row) {
         if (item instanceof ChannelData) {
-            String authKey = ((ChannelData) item).getAuthkey();;
+            String authKey = ((ChannelData) item).getAuthkey();
+
             if (authKey == null || authKey.length() < 10) {
                 Utils.showToast(getContext(), getStringById(R.string.nologin_error));
                 return;

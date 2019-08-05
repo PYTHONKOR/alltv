@@ -99,15 +99,15 @@ public class CardPresenter extends Presenter {
 
             Boolean isAdultContent = false;
 
-            for(int i=0; i<epgData.size(); i++) {
-                if(date.compareTo(epgData.get(i).getEndTime()) < 0) {
+            for (int i = 0; i < epgData.size(); i++) {
+                if (date.compareTo(epgData.get(i).getEndTime()) < 0) {
                     tvCh.setProgramName(epgData.get(i).getProgramName());
                     isAdultContent = epgData.get(i).isAdultContent();
                     break;
                 }
             }
 
-            if(tvCh.getProgramName().equals("") || isAdultContent)
+            if (tvCh.getProgramName().equals("") || isAdultContent)
                 cardView.setTitleText(tvCh.getTitle());
             else
                 cardView.setTitleText(tvCh.getTitle() + " - " + tvCh.getProgramName());
@@ -116,13 +116,13 @@ public class CardPresenter extends Presenter {
 
             int ret = tvCh.getFavorite();
 
-            if(ret == 0)
+            if (ret == 0)
                 cardView.setBadgeImage(null);
-            else if(ret == 1)
+            else if (ret == 1)
                 cardView.setBadgeImage(cardView.getResources().getDrawable(R.drawable.star_icon, null));
-            else if(ret == 2)
+            else if (ret == 2)
                 cardView.setBadgeImage(cardView.getResources().getDrawable(R.drawable.oksusu_icon_24, null));
-            else if(ret == 3)
+            else if (ret == 3)
                 cardView.setBadgeImage(cardView.getResources().getDrawable(R.drawable.pooq_icon_24, null));
 
             Picasso.get().load(tvCh.getStillImageUrl())

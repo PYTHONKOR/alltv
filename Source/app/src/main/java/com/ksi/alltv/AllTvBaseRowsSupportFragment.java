@@ -107,13 +107,13 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
     public static void updateFavoriteList(Utils.SiteType type, ArrayList<String> favorites) {
         ArrayList<ChannelData> chList = mChannels.get(type);
 
-        if(chList == null)
+        if (chList == null)
             return;
 
-        for(int i=0; i<chList.size(); i++) {
+        for (int i = 0; i < chList.size(); i++) {
             chList.get(i).setFavorite(0);
-            for(int j=0; j<favorites.size(); j++) {
-                if(chList.get(i).getId().compareTo(favorites.get(j)) == 0) {
+            for (int j = 0; j < favorites.size(); j++) {
+                if (chList.get(i).getId().compareTo(favorites.get(j)) == 0) {
                     chList.get(i).setFavorite(1);
                 }
             }
@@ -121,7 +121,9 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
     }
 
     public abstract void createRows();
+
     public abstract void refreshRows();
+
     public abstract void sendChannelData();
 
     protected void createDefaultRows() {

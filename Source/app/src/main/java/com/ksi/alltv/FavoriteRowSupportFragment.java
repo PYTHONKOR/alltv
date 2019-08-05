@@ -52,7 +52,8 @@ public class FavoriteRowSupportFragment extends AllTvBaseRowsSupportFragment imp
     public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item,
                               RowPresenter.ViewHolder rowViewHolder, Row row) {
         if (item instanceof ChannelData) {
-            String authKey = ((ChannelData) item).getAuthkey();;
+            String authKey = ((ChannelData) item).getAuthkey();
+
             if (authKey == null || authKey.length() < 10) {
                 Utils.showToast(getContext(), getStringById(R.string.nologin_error));
                 return;
@@ -88,7 +89,7 @@ public class FavoriteRowSupportFragment extends AllTvBaseRowsSupportFragment imp
         ArrayList<ChannelData> chList;
         ArrayList<ChannelData> chFavorites = new ArrayList<>();
 
-        if(mChannels.get(Utils.SiteType.Pooq) != null) {
+        if (mChannels.get(Utils.SiteType.Pooq) != null) {
             chList = mChannels.get(Utils.SiteType.Pooq);
             adapter = new ArrayObjectAdapter(presenterSelector);
 
@@ -104,7 +105,7 @@ public class FavoriteRowSupportFragment extends AllTvBaseRowsSupportFragment imp
                 mRowsAdapter.add(new ListRow(new HeaderItem("POOQ"), adapter));
         }
 
-        if(mChannels.get(Utils.SiteType.Oksusu) != null) {
+        if (mChannels.get(Utils.SiteType.Oksusu) != null) {
             chList = mChannels.get(Utils.SiteType.Oksusu);
             adapter = new ArrayObjectAdapter(presenterSelector);
 
@@ -120,14 +121,14 @@ public class FavoriteRowSupportFragment extends AllTvBaseRowsSupportFragment imp
                 mRowsAdapter.add(new ListRow(new HeaderItem("옥수수"), adapter));
         }
 
-        if(chFavorites.size() == 0) {
+        if (chFavorites.size() == 0) {
             adapter = new ArrayObjectAdapter(presenterSelector);
             mRowsAdapter.add(new ListRow(new HeaderItem("선호채널을 등록해 주세요."), adapter));
         }
 
         AllTvBaseRowsSupportFragment.setChannelList(Utils.SiteType.Favorite, chFavorites);
 
-        if(getMainFragmentAdapter() != null)
+        if (getMainFragmentAdapter() != null)
             getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
     }
 
@@ -144,6 +145,4 @@ public class FavoriteRowSupportFragment extends AllTvBaseRowsSupportFragment imp
 
         getActivity().startActivity(intent);
     }
-
 }
-

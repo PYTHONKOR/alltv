@@ -84,7 +84,8 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
     public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item,
                               RowPresenter.ViewHolder rowViewHolder, Row row) {
         if (item instanceof ChannelData) {
-            String authKey = ((ChannelData) item).getAuthkey();;
+            String authKey = ((ChannelData) item).getAuthkey();
+
             if (authKey == null || authKey.length() < 10) {
                 Utils.showToast(getContext(), getStringById(R.string.nologin_error));
                 return;
@@ -136,11 +137,11 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
 
             HeaderItem headerItem = new HeaderItem(ctData.getTitle());
 
-            if(adapter.size() > 0)
+            if (adapter.size() > 0)
                 mRowsAdapter.add(new ListRow(headerItem, adapter));
         }
 
-        if(getMainFragmentAdapter() != null)
+        if (getMainFragmentAdapter() != null)
             getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
     }
 

@@ -91,7 +91,7 @@ public class PooqSiteProcessor extends SiteProcessor {
                     getStringById(R.string.POOQ_CREDENTIAL_STR), mAuthKey)
                     .userAgent(getStringById(R.string.USERAGENT));
 
-            if(request == null || request.badRequest() || request.isBodyEmpty())
+            if (request == null || request.badRequest() || request.isBodyEmpty())
                 return;
 
             String resultJson = request.body();
@@ -192,7 +192,7 @@ public class PooqSiteProcessor extends SiteProcessor {
                     "limit", "100")
                     .userAgent(getStringById(R.string.USERAGENT));
 
-            if(request == null || request.badRequest() || request.isBodyEmpty())
+            if (request == null || request.badRequest() || request.isBodyEmpty())
                 return;
 
             String resultJson = request.body();
@@ -208,15 +208,15 @@ public class PooqSiteProcessor extends SiteProcessor {
 
                 ChannelData channelData = null;
 
-                for(int i=0; i<mChannelDatas.size(); i++) {
-                    if(mChannelDatas.get(i).getId().equals(serviceId)) {
+                for (int i = 0; i < mChannelDatas.size(); i++) {
+                    if (mChannelDatas.get(i).getId().equals(serviceId)) {
                         channelData = mChannelDatas.get(i);
                         break;
                     }
                 }
 
-                if(channelData == null) {
-    //                Log.e(TAG, serviceId + ", " + channelName + " is not exist.");
+                if (channelData == null) {
+                    //                Log.e(TAG, serviceId + ", " + channelName + " is not exist.");
                     continue;
                 }
 
@@ -274,12 +274,12 @@ public class PooqSiteProcessor extends SiteProcessor {
             HttpRequest postRequest = HttpRequest.post(requestUrl, true)
                     .userAgent(getStringById(R.string.USERAGENT));
 
-            if(postRequest == null || postRequest.badRequest() || postRequest.isBodyEmpty())
+            if (postRequest == null || postRequest.badRequest() || postRequest.isBodyEmpty())
                 return;
 
             String resultJson = postRequest.body();
 
-            if(resultJson == null || resultJson.equals(getStringById(R.string.NULL_STR)) || resultJson.length() == 0)
+            if (resultJson == null || resultJson.equals(getStringById(R.string.NULL_STR)) || resultJson.length() == 0)
                 return;
 
             JsonParser parser = new JsonParser();
