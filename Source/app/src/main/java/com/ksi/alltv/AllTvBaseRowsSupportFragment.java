@@ -24,8 +24,6 @@
 
 package com.ksi.alltv;
 
-import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v17.leanback.app.RowsSupportFragment;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
@@ -54,6 +52,7 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        createRows();
     }
 
     @Override
@@ -105,13 +104,31 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
         }
     }
 
-    public abstract void createRows();
+    public static void updateFavoriteList(Utils.SiteType type, ArrayList<String> favorites) {
+        ArrayList<ChannelData> chList = mChannels.get(type);
 
-    public void createDefaultRows(String errMsg) {
+        if(chList == null)
+            return;
+
+        for(int i=0; i<chList.size(); i++) {
+            chList.get(i).setFavorite(0);
+            for(int j=0; j<favorites.size(); j++) {
+                if(chList.get(i).getId().compareTo(favorites.get(j)) == 0) {
+                    chList.get(i).setFavorite(1);
+                }
+            }
+        }
+    }
+
+    public abstract void createRows();
+    public abstract void refreshRows();
+    public abstract void sendChannelData();
+
+    protected void createDefaultRows() {
         CardPresenter presenterSelector = new CardPresenter();
         ArrayObjectAdapter adapter = new ArrayObjectAdapter(presenterSelector);
 
-        HeaderItem headerItem = new HeaderItem(errMsg);
+        HeaderItem headerItem = new HeaderItem(getStringById(R.string.dologin_please));
 
         mRowsAdapter.add(new ListRow(headerItem, adapter));
     }
@@ -120,55 +137,5 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
         return !mCategory.containsKey(checkType) || mCategory.get(checkType) == null || mCategory.get(checkType).size() == 0;
     }
 
-    protected void playVideo(ChannelData playChannel) {
-
-        if (PlayerActivity.active) {
-            return;
-        }
-
-        Intent intent = new Intent(getActivity(), PlayerActivity.class);
-        intent.putExtra(getStringById(R.string.PLAYCHANNEL_STR), playChannel);
-
-        getActivity().startActivity(intent);
-    }
-
-    protected void playVideo(ChannelData playChannel, String playInfo) {
-
-        if (PlayerActivity.active) {
-            return;
-        }
-
-        Intent intent = new Intent(getActivity(), PlayerActivity.class);
-        intent.putExtra(getStringById(R.string.PLAYCHANNEL_STR), playChannel);
-        intent.putExtra(getStringById(R.string.PLAYINFO_STR), playInfo);
-
-        getActivity().startActivity(intent);
-    }
-
-    protected class FetchVideoUrlTask extends AsyncTask<Integer, Integer, Integer> {
-
-        SpinnerFragment mSpinnerFragment = new SpinnerFragment();
-
-        protected Integer doInBackground(Integer... channelIndex) {
-            return Utils.Code.FetchVideoUrlTask_OK.ordinal();
-        }
-
-        protected void onProgressUpdate(Integer... progress) {
-            super.onProgressUpdate(progress);
-        }
-
-        protected void onPostExecute(Integer result) {
-
-            getFragmentManager().beginTransaction().remove(mSpinnerFragment).commit();
-
-            switch (Utils.Code.values()[result]) {
-                case NoAuthKey_err:
-                    Utils.showToast(getActivity(), R.string.login_error_video);
-                    break;
-                case NoVideoUrl_err:
-                    Utils.showToast(getActivity(), R.string.geturl_error);
-                    break;
-            }
-        }
-    }
 }
+

@@ -6,8 +6,9 @@
     <string name="opensource">오픈소스 라이센스</string>
     <string name="pooq">POOQ</string>
     <string name="oksusu">옥수수</string>
+    <string name="favorite">마이채널</string>
     <string name="settings_title">설정</string>
-    <string name="settings_desc">로그인 정보등을 설정합니다.</string>
+    <string name="settings_desc">로그인 정보 등을 설정합니다.</string>
     <string name="oksusulogin_ok">옥수수 로그인 하였습니다.</string>
     <string name="oksusulogin_fail">옥수수 로그인에 실패했습니다.</string>
     <string name="oksususettings">옥수수 설정</string>
@@ -40,4 +41,10 @@
     <string name="update_version_str">새로운 버전의 업데이트가 있습니다. Github에서 확인해 보세요.</string>
     <string name="ok_str">확인</string>
     <string name="noinfo_str">정보 없음</string>
+    <string name="first_channel">첫번째 채널입니다.</string>
+    <string name="last_channel">마지막 채널입니다.</string>
+    <string name="favorite_enable">마이채널이 선택되었습니다.</string>
+    <string name="favorite_disable">마이채널이 해제되었습니다.</string>
+    <string name="adult">성인</string>
+    <string name="adult_contents">성인전용</string>
 </resources>

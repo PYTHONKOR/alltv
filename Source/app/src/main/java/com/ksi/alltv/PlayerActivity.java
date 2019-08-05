@@ -24,21 +24,22 @@
 
 package com.ksi.alltv;
 
-import android.app.Instrumentation;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
+
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -52,36 +53,41 @@ import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
-import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.Locale;
 
 
 public class PlayerActivity extends FragmentActivity implements Player.EventListener, Target {
+
+    private static final String TAG = PlayerActivity.class.getSimpleName();
 
     static boolean active = false;
 
     private PlayerView mPlayerView;
     private SimpleExoPlayer mPlayer;
-    private DataSource.Factory mDataSourceFactory;
 
-    private Animation translateTopAnim;
-    private Animation translateBottomAnim;
-    private LinearLayout slidingPanel;
-    private TextView infoView, timeView;
+    private ArrayList<ChannelData> mChannels;
+    private int mCurrentChannel;
+    private int mChannelIndex;
+    private int mEPGIndex;
 
-    private Handler mHandler;
-    private Runnable mRunnable;
+    private SlidingPanel mSlidingPanel;
+    private ProgressBar mProgressBar;
 
-    private JsonArray mInfoArray;
-    private int mInfoIndex;
+    private Point mWindowSize;
+    private boolean isLongPressed = false;
+    private boolean isSaveNeeded = false;
 
-    private boolean isPageOpen = false;
+
+    private String getStringById(int resourceId) {
+        return this.getResources().getString(resourceId);
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -89,162 +95,284 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         setContentView(R.layout.activity_videoplayer);
 
-        slidingPanel = (LinearLayout) findViewById(R.id.slidingPanel);
-        infoView = (TextView) findViewById(R.id.infoView);
-        timeView = (TextView) findViewById(R.id.timeView);
+        mPlayerView = (PlayerView)findViewById(R.id.video_view);
+        mProgressBar = (ProgressBar)findViewById(R.id.progressBar);
 
-        mPlayerView = findViewById(R.id.video_view);
+        mProgressBar.setVisibility(View.VISIBLE);
 
-        mPlayer = ExoPlayerFactory.newSimpleInstance(this, new DefaultTrackSelector());
+        mSlidingPanel = new SlidingPanel(this);
 
-        mPlayerView.setPlayer(mPlayer);
-        mPlayerView.setUseController(false);
+        mWindowSize = Utils.getDisplaySize(this);
 
-        if (BuildConfig.DEBUG) {
+//        Log.e(TAG, "onCreate: " + Integer.toString(mWindowSize.x) + ", " + Integer.toString(mWindowSize.y));
+
+        isLongPressed = false;
+        isSaveNeeded = false;
+
+        createPlayer();
+
+        if(BuildConfig.DEBUG) {
             mPlayerView.setOnTouchListener(new View.OnTouchListener() {
 
                 @Override
                 public boolean onTouch(View view, MotionEvent motionEvent) {
 
-                    if (motionEvent.getX() < 100. && motionEvent.getY() < 100.) {
+                    float left, right, top, bottom;
 
-                        new Thread(new Runnable() {
-                            public void run() {
-                                new Instrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+                    left  = (float) (mWindowSize.x * 0.1);
+                    right = (float) (mWindowSize.x * 0.9);
+                    top = left;
+                    bottom = (float)(mWindowSize.y - top);
+
+//                    Log.e(TAG, "onCreate: " + Float.toString(left) + ", " + Float.toString(right));
+//                    Log.e(TAG, "motionEvent: " + Float.toString(motionEvent.getX()) + ", " + Float.toString(motionEvent.getY()));
+
+                    if(motionEvent.getX() < left) {
+                        if (motionEvent.getY() < top) {
+                            Intent intent = new Intent();
+                            intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels);
+                            if( isSaveNeeded )
+                                setResult(RESULT_OK, intent);
+                            else
+                                setResult(RESULT_CANCELED, intent);
+                            finishAfterTransition();
+                        } else if (mSlidingPanel.isPanelShow() && motionEvent.getY() > bottom) {
+                            if(mEPGIndex >= 0) {
+                                if(mEPGIndex > 0) mEPGIndex -= 1;
+                                displayProgramInfo(3000);
                             }
-                        }).start();
-
-                    } else {
-                        if (isPageOpen) {
-                            hideProgramInfo();
                         } else {
-                            showProgramInfo();
+                            if (mCurrentChannel > 0) {
+                                mCurrentChannel -= 1;
+                                mSlidingPanel.hideSlidingPanel();
+                                mProgressBar.setVisibility(View.VISIBLE);
+                                new FetchVideoUrlTask().execute(mCurrentChannel);
+                            } else {
+                                Toast.makeText(getBaseContext(), getStringById(R.string.first_channel),
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    } else if(motionEvent.getX() > right) {
+                        if (mSlidingPanel.isPanelShow() && motionEvent.getY() > bottom) {
+
+                            if(mEPGIndex >= 0) {
+                                int size = mChannels.get(mChannelIndex).getEPG().size()-1;
+                                if(mEPGIndex < size) mEPGIndex += 1;
+                                displayProgramInfo(3000);
+                            }
+
+                        } else {
+                            if (mCurrentChannel < mChannels.size() - 1) {
+                                mCurrentChannel += 1;
+                                mSlidingPanel.hideSlidingPanel();
+                                mProgressBar.setVisibility(View.VISIBLE);
+                                new FetchVideoUrlTask().execute(mCurrentChannel);
+                            } else {
+                                Toast.makeText(getBaseContext(), getStringById(R.string.last_channel),
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    } else {
+                        if(mSlidingPanel.isPanelShow()) {
+                            if( motionEvent.getY() > bottom) {
+
+                                if(mCurrentChannel != mChannelIndex) {
+                                    return false;
+                                }
+
+                                ChannelData chData = mChannels.get(mCurrentChannel);
+                                isSaveNeeded = true;
+                                if (chData.getFavorite() > 0) {
+                                    chData.setFavorite(0);
+                                    mSlidingPanel.hideFavorite();
+                                    Toast.makeText(getBaseContext(), getStringById(R.string.favorite_disable),
+                                            Toast.LENGTH_SHORT).show();
+                                } else {
+                                    chData.setFavorite(1);
+                                    mSlidingPanel.showFavorite();
+                                    Toast.makeText(getBaseContext(), getStringById(R.string.favorite_enable),
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
+                                mSlidingPanel.hideSlidingPanel();
+                            }
+                        }
+                        else {
+                            showProgramInfo(3000);
                         }
                     }
-
                     return false;
                 }
             });
         }
 
-        mDataSourceFactory = new DefaultDataSourceFactory(this, Util.getUserAgent(this, getResources().getString(R.string.app_name)));
+        mSlidingPanel.setInfoText("");
 
-        ChannelData item = getIntent().getParcelableExtra(getResources().getString(R.string.PLAYCHANNEL_STR));
+        mChannels = getIntent().getParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG));
+        mCurrentChannel = getIntent().getIntExtra(getStringById(R.string.CURRENTCHANNEL_STR), 0);
 
-        String info = getIntent().getStringExtra(getResources().getString(R.string.PLAYINFO_STR));
+        new FetchVideoUrlTask().execute(mCurrentChannel);
 
-        infoView.setText("");
-        mInfoArray = null;
+    }
 
-        if (info != null && info.length() > 0) {
-            JsonParser jsonParser = new JsonParser();
-            mInfoArray = jsonParser.parse(info).getAsJsonArray();
-        } else {
-            infoView.setText(item.getProgram());
+    @Override
+    protected void onNewIntent(Intent intent) {
+        ArrayList<ChannelData> channelData = intent.getParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG));
+        mChannels.clear();
+        mChannels = channelData;
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+
+        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
+
+            if (mSlidingPanel.isPanelShow()) {
+                if( isLongPressed ) {
+                    isLongPressed = false;
+                } else {
+                    mSlidingPanel.hideSlidingPanel();
+
+                    if(mCurrentChannel != mChannelIndex) {
+                        mCurrentChannel = mChannelIndex;
+                        mProgressBar.setVisibility(View.VISIBLE);
+                        new FetchVideoUrlTask().execute(mCurrentChannel);
+                    }
+                }
+            } else {
+                showProgramInfo(3000);
+            }
         }
 
-        Uri uriLive = Uri.parse(item.getVideoUrl());
-
-        HlsMediaSource mediaSourcelive = new HlsMediaSource.Factory(mDataSourceFactory).
-                setAllowChunklessPreparation(true).createMediaSource(uriLive);
-
-        if (item.isAudioChannel()) {
-            Picasso.get().load(item.getStillImageUrl()).into(this);
-        }
-
-        mPlayer.prepare(mediaSourcelive);
-        mPlayer.setPlayWhenReady(true);
-        mPlayer.addListener(this);
-
-        translateTopAnim = AnimationUtils.loadAnimation(this, R.anim.translate_top);
-        translateBottomAnim = AnimationUtils.loadAnimation(this, R.anim.translate_bottom);
-
-        translateTopAnim.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                if (isPageOpen) {
-                    slidingPanel.setVisibility(View.INVISIBLE);
-                    isPageOpen = false;
-                } else {
-                    isPageOpen = true;
-                }
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
-        });
-
-        translateBottomAnim.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                if (isPageOpen) {
-                    slidingPanel.setVisibility(View.INVISIBLE);
-                    isPageOpen = false;
-                } else {
-                    isPageOpen = true;
-                }
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
-        });
-
-        mHandler = new Handler();
-        mRunnable = new Runnable() {
-            @Override
-            public void run() {
-                hideProgramInfo();
-            }
-        };
+        return super.onKeyDown(keyCode, event);
     }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+
         if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
-            if (isPageOpen) {
-                hideProgramInfo();
+
+            if( event.isLongPress() ) {
+
+                isLongPressed = true;
+
+                if(!mSlidingPanel.isPanelShow()) {
+                    showProgramInfo(3000);
+                }
+
+                if(mCurrentChannel != mChannelIndex) {
+                    return false;
+                }
+
+                isSaveNeeded = true;
+                ChannelData chData = mChannels.get(mCurrentChannel);
+
+                if (chData.getFavorite() > 0) {
+                    chData.setFavorite(0);
+                    mSlidingPanel.hideFavorite();
+                    Toast.makeText(getBaseContext(), getStringById(R.string.favorite_disable),
+                            Toast.LENGTH_SHORT).show();
+
+                } else {
+                    chData.setFavorite(1);
+                    mSlidingPanel.showFavorite();
+                    Toast.makeText(getBaseContext(), getStringById(R.string.favorite_enable),
+                            Toast.LENGTH_SHORT).show();
+                }
+
             } else {
-                showProgramInfo();
+                mSlidingPanel.closeDelayed(3000);
             }
-        } else if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (isPageOpen) {
-                hideProgramInfo();
+
+        } else if(keyCode == KeyEvent.KEYCODE_BACK) {
+            if(mSlidingPanel.isPanelShow()) {
+                mSlidingPanel.hideSlidingPanel();
                 return false;
+            } else {
+
+                Intent intent = new Intent();
+                intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels);
+
+                if( isSaveNeeded )
+                    setResult(RESULT_OK, intent);
+                else
+                    setResult(RESULT_CANCELED, intent);
+
+                finishAfterTransition();
             }
-        } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
 
-            if (isPageOpen && mInfoArray != null) {
+        } else if(keyCode == KeyEvent.KEYCODE_DPAD_UP) {
 
-                if (mInfoIndex > 0) mInfoIndex -= 1;
-                else mInfoIndex = 0;
+            if(mSlidingPanel.isPanelShow()) {
+                if(mChannelIndex < mChannels.size()-1)
+                    mChannelIndex += 1;
+                else
+                    mChannelIndex = 0;
 
-                displayProgramInfo();
+                ChannelData chData = mChannels.get(mChannelIndex);
+                ArrayList<EPGData> epgData = chData.getEPG();
 
-                mHandler.removeCallbacks(mRunnable);
-                mHandler.postDelayed(mRunnable, 5000);
+                if(epgData.size() == 0) mEPGIndex = -1;
+                else if(mEPGIndex < 0)  mEPGIndex = 0;
+                else if(mEPGIndex > epgData.size()-1) mEPGIndex = epgData.size()-1;
+
+                displayProgramInfo(3000);
+            } else {
+                if(mCurrentChannel < mChannels.size()-1) {
+                    mCurrentChannel += 1;
+                    mSlidingPanel.hideSlidingPanel();
+                    mProgressBar.setVisibility(View.VISIBLE);
+                    new FetchVideoUrlTask().execute(mCurrentChannel);
+                } else {
+                    Toast.makeText(getBaseContext(), getStringById(R.string.last_channel),
+                            Toast.LENGTH_SHORT).show();
+                }
             }
 
-        } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+        } else if(keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+            if(mSlidingPanel.isPanelShow()) {
+                if(mChannelIndex > 0)
+                    mChannelIndex -= 1;
+                else
+                    mChannelIndex = mChannels.size()-1;
 
-            if (isPageOpen && mInfoArray != null) {
+                ChannelData chData = mChannels.get(mChannelIndex);
+                ArrayList<EPGData> epgData = chData.getEPG();
 
-                if (mInfoIndex < mInfoArray.size() - 1) mInfoIndex += 1;
-                else mInfoIndex = mInfoArray.size() - 1;
+                if(epgData.size() == 0) mEPGIndex = -1;
+                else if(mEPGIndex < 0)  mEPGIndex = 0;
+                else if(mEPGIndex > epgData.size()-1) mEPGIndex = epgData.size()-1;
 
-                displayProgramInfo();
+                displayProgramInfo(3000);
+            } else {
+                if(mCurrentChannel > 0) {
+                    mCurrentChannel -= 1;
+                    mSlidingPanel.hideSlidingPanel();
+                    mProgressBar.setVisibility(View.VISIBLE);
+                    new FetchVideoUrlTask().execute(mCurrentChannel);
+                } else {
+                    Toast.makeText(getBaseContext(), getStringById(R.string.first_channel),
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
 
-                mHandler.removeCallbacks(mRunnable);
-                mHandler.postDelayed(mRunnable, 5000);
+        } else if(keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+
+            if(mSlidingPanel.isPanelShow()) {
+                if(mEPGIndex >= 0) {
+                    if (mEPGIndex > 0) mEPGIndex -= 1;
+                }
+                displayProgramInfo(3000);
+            }
+
+        } else if(keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+
+            if(mSlidingPanel.isPanelShow()) {
+                if(mEPGIndex >= 0) {
+                    int size = mChannels.get(mChannelIndex).getEPG().size()-1;
+                    if (mEPGIndex < size) mEPGIndex += 1;
+                }
+                displayProgramInfo(3000);
             }
 
         }
@@ -256,99 +384,112 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
     public void onDestroy() {
         super.onDestroy();
 
-        hideProgramInfo();
-
+        mSlidingPanel.hideSlidingPanel();
         releasePlayer();
     }
 
-    private void showProgramInfo() {
+    private void showProgramInfo(int msec) {
 
-        try {
-            if (isPageOpen) return;
+        if(mSlidingPanel.isPanelShow()) return;
 
-            if (mInfoArray != null) {
-                mInfoIndex = 0;
+        mChannelIndex = mCurrentChannel;
 
-                SimpleDateFormat sdf = new SimpleDateFormat(getResources().getString(R.string.TIME_FORMAT_STR), Locale.KOREA);
-                String currentTime = sdf.format(new Date());
+        ChannelData chData = mChannels.get(mChannelIndex);
+        ArrayList<EPGData> epgData = chData.getEPG();
 
-                for (int i = 0; i < mInfoArray.size() - 1; i++) {
+        mEPGIndex = -1;
 
-                    if (mInfoArray.get(i).isJsonNull())
-                        continue;
-
-                    if (mInfoArray.get(i).getAsJsonObject().get(getResources().getString(R.string.ETIME_STR)).isJsonNull())
-                        continue;
-
-                    String etime = mInfoArray.get(i).getAsJsonObject().get(getResources().getString(R.string.ETIME_STR)).getAsString();
-
-                    if (currentTime.compareTo(etime) <= 0) {
-                        mInfoIndex = i;
-                        break;
-                    }
-                }
-
-                sdf = new SimpleDateFormat(getResources().getString(R.string.CURRENT_TIME_FORMAT_STR), Locale.KOREA);
-                currentTime = sdf.format(new Date());
-
-                timeView.setText(currentTime);
-
-                displayProgramInfo();
+        for(int i=0; i<epgData.size(); i++) {
+            Date now = new Date();
+            if(now.compareTo(epgData.get(i).getEndTime()) < 0) {
+                mEPGIndex = i;
+                break;
             }
-
-            slidingPanel.startAnimation(translateTopAnim);
-            slidingPanel.setVisibility(View.VISIBLE);
-
-            mHandler.postDelayed(mRunnable, 5000);
-        } catch (Exception ex) {
-
-        } finally {
-
         }
+
+        displayProgramInfo(0);
+
+        mSlidingPanel.showSlidingPanel(msec);
     }
 
-    private void hideProgramInfo() {
+    private void displayProgramInfo(int msec) {
 
-        if (!isPageOpen) return;
+        ChannelData chData = mChannels.get(mChannelIndex);
+        ArrayList<EPGData> epgData = chData.getEPG();
 
-        slidingPanel.startAnimation(translateBottomAnim);
-        slidingPanel.setVisibility(View.GONE);
+        String title = chData.getTitle();
 
-        mHandler.removeCallbacks(mRunnable);
+        if(mEPGIndex >= 0) {
+            String name = epgData.get(mEPGIndex).getProgramName();
+            Date stime = epgData.get(mEPGIndex).getStartTime();
+            Date etime = epgData.get(mEPGIndex).getEndTime();
+
+            String stimeStr = new SimpleDateFormat("HH:mm").format(stime);
+            String etimeStr = new SimpleDateFormat("HH:mm").format(etime);
+
+            mSlidingPanel.setInfoText(stimeStr + " ~ " + etimeStr + "\n" + title + " - " + name + "\n");
+        } else {
+            mSlidingPanel.setInfoText(title);
+        }
+
+        String currentTime = new SimpleDateFormat("HH:mm").format(new Date());
+        mSlidingPanel.setTimeText(currentTime);
+
+        if(chData.getFavorite() > 0) {
+            mSlidingPanel.showFavorite();
+        } else {
+            mSlidingPanel.hideFavorite();
+        }
+
+        if(msec > 0)
+            mSlidingPanel.closeDelayed(msec);
+
     }
 
-    private void displayProgramInfo() {
+    private void createPlayer() {
 
-        try {
-            String stime = "", etime = "", name = "", finalText = getResources().getString(R.string.noinfo_str);
-
-            if (!mInfoArray.get(mInfoIndex).getAsJsonObject().get(getResources().getString(R.string.STIME_STR)).isJsonNull())
-                stime = mInfoArray.get(mInfoIndex).getAsJsonObject().get(getResources().getString(R.string.STIME_STR)).getAsString();
-
-            if (!mInfoArray.get(mInfoIndex).getAsJsonObject().get(getResources().getString(R.string.ETIME_STR)).isJsonNull())
-                etime = mInfoArray.get(mInfoIndex).getAsJsonObject().get(getResources().getString(R.string.ETIME_STR)).getAsString();
-
-            if (!mInfoArray.get(mInfoIndex).getAsJsonObject().get(getResources().getString(R.string.NAME_STR)).isJsonNull())
-                name = mInfoArray.get(mInfoIndex).getAsJsonObject().get(getResources().getString(R.string.NAME_STR)).getAsString();
-
-
-            if (stime != null && stime.length() > 0 && etime != null && etime.length() > 0 && name != null && name.length() > 0) {
-                stime = stime.substring(8, 10) + ":" + stime.substring(10, 12);
-                etime = etime.substring(8, 10) + ":" + etime.substring(10, 12);
-                finalText = stime + " ~ " + etime + "\n" + name + "\n";
-            }
-
-            infoView.setText(finalText);
-        } catch (Exception ex) {
-            infoView.setText(getResources().getString(R.string.noinfo_str));
-        } finally {
-
+        if (mPlayer != null) {
+            releasePlayer();
         }
+
+        mPlayer = ExoPlayerFactory.newSimpleInstance(getApplicationContext(), new DefaultTrackSelector());
+
+        mPlayerView.setPlayer(mPlayer);
+        mPlayerView.setUseController(false);
+
+        mPlayer.setPlayWhenReady(true);
+        mPlayer.addListener(this);
+
+        mPlayer.setVolume(1.0f);
+
+        mSlidingPanel.setInfoText("");
+
+    }
+
+    private void openPlayer(String videoUrl) {
+
+        ChannelData chData = mChannels.get(mCurrentChannel);
+
+        if ( chData.isAudioChannel() ) {
+            Picasso.get().load(chData.getStillImageUrl()).into(this);
+        }
+
+        Uri uriLive = Uri.parse(videoUrl);
+
+        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this,
+                getStringById(R.string.USERAGENT));
+        HlsMediaSource mediaSourcelive = new HlsMediaSource.Factory(dataSourceFactory)
+                .setAllowChunklessPreparation(true)
+                .createMediaSource(uriLive);
+
+        mPlayer.prepare(mediaSourcelive);
+
     }
 
     private void releasePlayer() {
-        if (mPlayer != null) {
 
+        if (mPlayer != null) {
+            mPlayer.stop(true);
             mPlayer.release();
             mPlayer = null;
         }
@@ -377,7 +518,6 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         }
 
         active = false;
-
         finish();
     }
 
@@ -388,6 +528,9 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
     @Override
     public void onLoadingChanged(boolean isLoading) {
+
+        if( isLoading )
+            showProgramInfo(1000);
 
     }
 
@@ -431,4 +574,182 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
     public void onPrepareLoad(Drawable placeHolderDrawable) {
 
     }
+
+    private class FetchVideoUrlTask extends AsyncTask<Integer, Integer, Integer> {
+
+        private String videoUrl = null;
+
+        protected Integer doInBackground(Integer... channelIndex) {
+
+            ArrayList<ChannelData> chList = mChannels;
+            int arrIndex = channelIndex[0];
+
+            ChannelData chData = chList.get(arrIndex);
+
+            if(chData.getSiteType() == Utils.SiteType.Oksusu.ordinal()) {
+                return OksusuFetchVideoUrl(chData);
+            } else if(chData.getSiteType() == Utils.SiteType.Pooq.ordinal()) {
+                return PooqFetchVideoUrl(chData);
+            }
+
+            return Utils.Code.NoVideoUrl_err.ordinal();
+        }
+
+        protected void onProgressUpdate(Integer... progress) {
+            super.onProgressUpdate(progress);
+        }
+
+        protected void onPostExecute(Integer result) {
+
+            mProgressBar.setVisibility(View.GONE);
+
+            switch (Utils.Code.values()[result]) {
+                case NoAuthKey_err:
+                    Utils.showToast(getBaseContext(), R.string.login_error_video);
+                    setResult(RESULT_CANCELED);
+                    finishAfterTransition();
+                    break;
+                case NoVideoUrl_err:
+                    Utils.showToast(getBaseContext(), R.string.geturl_error);
+                    setResult(RESULT_CANCELED);
+                    finishAfterTransition();
+                    break;
+                case FetchVideoUrlTask_OK:
+                    openPlayer(videoUrl);
+                    break;
+            }
+        }
+
+        private int OksusuFetchVideoUrl(ChannelData chData) {
+
+            String authKey = chData.getAuthkey();
+
+            if (authKey == null || authKey.length() < 10)
+                return Utils.Code.NoAuthKey_err.ordinal();
+
+            try {
+
+                String url = getStringById(R.string.OKSUSUVIDEO_URL) + String.valueOf(chData.getId());
+
+                HttpRequest request = HttpRequest.get(url)
+                        .userAgent("Mozilla/4.0")
+                        .header(getStringById(R.string.COOKIE_STR), authKey);
+
+                if(request == null || request.badRequest() || request.isBodyEmpty()) {
+                    return Utils.Code.NoVideoUrl_err.ordinal();
+                }
+
+                String resultBody = request.body();
+
+                if (resultBody.contains(getStringById(R.string.CONTENTINFO_STR))) {
+
+                    String jsonStr = resultBody.substring(resultBody.indexOf(getStringById(R.string.CONTENTINFO_STR)) + 14,
+                            resultBody.indexOf(getStringById(R.string.OKSUSUJSONSUB_STR)));
+
+                    JsonParser jsonParser = new JsonParser();
+                    JsonElement jsonElement = jsonParser.parse(jsonStr);
+
+                    videoUrl = Utils.removeQuote(jsonElement.getAsJsonObject().get(getStringById(R.string.STREAMURL_STR))
+                            .getAsJsonObject().get(getQualityTag(chData)).toString());
+
+                    if (videoUrl.equals("null") || videoUrl.length() == 0) {
+                        return Utils.Code.NoVideoUrl_err.ordinal();
+                    }
+
+                } else {
+                    return Utils.Code.NoVideoUrl_err.ordinal();
+                }
+
+            } catch (Exception ex) {
+                return Utils.Code.NoVideoUrl_err.ordinal();
+            } finally {
+                return Utils.Code.FetchVideoUrlTask_OK.ordinal();
+            }
+
+        }
+
+        private int PooqFetchVideoUrl(ChannelData chData) {
+
+            String authKey = chData.getAuthkey();
+
+            if (authKey == null || authKey.length() < 10)
+                return Utils.Code.NoAuthKey_err.ordinal();
+
+            try {
+
+                String url = getStringById(R.string.POOQ_CHANNEL_URL) + chData.getId() + "/" + getStringById(R.string.URL_STR);
+
+                HttpRequest request = HttpRequest.get(url, true,
+                        getStringById(R.string.DEVICETYPEID_STR), getStringById(R.string.PC_STR),
+                        getStringById(R.string.MARKETTYPEID_STR), getStringById(R.string.GENERIC_STR),
+                        getStringById(R.string.POOQ_CREDENTIAL_STR), authKey,
+                        getStringById(R.string.QUALITY_STR), getQualityTag(chData),
+                        getStringById(R.string.DEVICEMODEID_STR), getStringById(R.string.PC_STR),
+                        getStringById(R.string.AUTHTYPE_STR), getStringById(R.string.URL_STR))
+                        .userAgent(getStringById(R.string.USERAGENT));
+
+                if (request == null || request.badRequest() || request.isBodyEmpty()) {
+                    return Utils.Code.NoVideoUrl_err.ordinal();
+                }
+
+                String resultJson = request.body();
+
+                JsonParser parser = new JsonParser();
+
+                videoUrl = Utils.removeQuote(parser.parse(resultJson).getAsJsonObject().get(getStringById(R.string.RESULT_STR))
+                        .getAsJsonObject()
+                        .get(getStringById(R.string.SIGNEDURL_STR))
+                        .getAsString());
+
+                if (videoUrl == null || videoUrl.equals(getStringById(R.string.NULL_STR)) || videoUrl.length() == 0) {
+                    return Utils.Code.NoVideoUrl_err.ordinal();
+                }
+
+            } catch (Exception ex) {
+                return Utils.Code.NoVideoUrl_err.ordinal();
+            } finally {
+                return Utils.Code.FetchVideoUrlTask_OK.ordinal();
+            }
+        }
+
+        private String getQualityTag(ChannelData chData) {
+
+            int siteType = chData.getSiteType();
+            int qualityType = chData.getQualityType();
+
+            if(siteType == Utils.SiteType.Oksusu.ordinal()) {
+
+                switch (SettingsData.OksusuQualityType.values()[qualityType]) {
+                    case AUTO:
+                        return getStringById(R.string.URLAUTO_STR);
+                    case FullHD:
+                        return getStringById(R.string.URLFHD_STR);
+                    case HD:
+                        return getStringById(R.string.URLHD_STR);
+                    case SD:
+                        return getStringById(R.string.URLSD_STR);
+                }
+
+                return getStringById(R.string.URLAUTO_STR);
+
+            } else {
+
+                switch (SettingsData.PooqQualityType.values()[qualityType]) {
+                    case Mobile:
+                        return getStringById(R.string.POOQ_MOBILE_QUALITY_TAG);
+                    case SD:
+                        return getStringById(R.string.POOQ_SD_QUALITY_TAG);
+                    case HD:
+                        return getStringById(R.string.POOQ_HD_QUALITY_TAG);
+                    case FHD:
+                        return getStringById(R.string.POOQ_FHD_QUALITY_TAG);
+                }
+
+                return getStringById(R.string.POOQ_SD_QUALITY_TAG);
+            }
+        }
+
+    }
+
 }
+

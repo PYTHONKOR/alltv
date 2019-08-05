@@ -41,25 +41,35 @@ import java.util.HashMap;
 public class Utils {
 
     public enum Code {
-        CodeStart, OksusuSave, PooqSave, SettingsRequestCode,
-        ServiceIntent_OK, ServiceIntent_Fail,
-        NoAuthKey_err, NoVideoUrl_err,
+        CodeStart,
+        OksusuSave,
+        PooqSave,
+        SettingsRequestCode,
+        ServiceIntent_OK,
+        ServiceIntent_Fail,
+        NoAuthKey_err,
+        NoVideoUrl_err,
         FetchVideoUrlTask_OK,
-        FetchOksusuAuthKeyTask_OK, FetchOksusuAuthKeyTask_FAIL
+        FetchOksusuAuthKeyTask_OK,
+        FetchOksusuAuthKeyTask_FAIL,
+        FavoritePlay,
+        OksusuPlay,
+        PooqPlay
     }
 
     public enum Header {
-        Oksusu, Pooq, Etc
+        Oksusu, Pooq, Favorite, Etc
     }
 
     public enum SiteType {
-        None, Oksusu, Pooq
+        None, Oksusu, Pooq, Favorite
     }
 
     /*
      * Making sure public utility methods remain static
      */
     private Utils() {
+
     }
 
     /**
@@ -136,6 +146,28 @@ public class Utils {
     }
 
     public static String removeQuote(String removeStr) {
+        if(removeStr == null || removeStr.isEmpty())
+            return null;
         return removeStr.replace("\"", "");
     }
+
+    public static String removeHTMLTag(String str) {
+
+        if(str == null || str.isEmpty())
+            return null;
+
+        String returnStr = str;
+
+        returnStr = returnStr.replaceAll("\"", "");
+        returnStr = returnStr.replaceAll("&gt;", ">");
+        returnStr = returnStr.replaceAll("&lt;", "<");
+        returnStr = returnStr.replaceAll("&quot;", "\"");
+        returnStr = returnStr.replaceAll("&nbsp;", " ");
+        returnStr = returnStr.replaceAll("&amp;", "&");
+        returnStr = returnStr.replaceAll("\n", " ");
+        returnStr = returnStr.replaceAll("<br>", " ");
+
+        return returnStr;
+    }
+
 }

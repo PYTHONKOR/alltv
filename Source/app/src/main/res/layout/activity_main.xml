@@ -5,6 +5,7 @@
     android:name="com.ksi.alltv.MainFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:launchMode="singleTop"
     tools:context=".MainActivity"
     tools:deviceIds="tv"
     tools:ignore="MergeRootFrame" />

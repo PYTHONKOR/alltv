@@ -31,18 +31,22 @@ import android.support.v4.content.ContextCompat;
 public class ErrorFragment extends android.support.v17.leanback.app.ErrorSupportFragment {
     private static final boolean TRANSLUCENT = true;
 
+    private String getStringById(int resourceId) {
+        return this.getResources().getString(resourceId);
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setTitle(getResources().getString(R.string.browse_title));
+        setTitle(getStringById(R.string.browse_title));
     }
 
     void setErrorContent() {
         setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.lb_ic_sad_cloud));
-        setMessage(getResources().getString(R.string.error_fragment_message));
+        setMessage(getStringById(R.string.error_fragment_message));
         setDefaultBackground(TRANSLUCENT);
 
-        setButtonText(getResources().getString(R.string.dismiss_error));
+        setButtonText(getStringById(R.string.dismiss_error));
         setButtonClickListener(
                 arg0 -> getFragmentManager().beginTransaction().remove(ErrorFragment.this).commit());
     }

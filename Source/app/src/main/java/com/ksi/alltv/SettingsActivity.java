@@ -53,14 +53,17 @@ public class SettingsActivity extends FragmentActivity {
         Pooq, PooqId, PooqPw, PooqQuality, PooqMobile, PooqSD, PooqHD, PooqFHD, PooqSave
     }
 
+    private String getStringById(int resourceId) {
+        return this.getResources().getString(resourceId);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (null == savedInstanceState) {
 
             Gson gson = new Gson();
-            mSettings = gson.fromJson(getIntent().getStringExtra(getResources().getString(R.string.SETTINGSDATA_STR)), SettingsData.class);
-
+            mSettings = gson.fromJson(getIntent().getStringExtra(getStringById(R.string.SETTINGSDATA_STR)), SettingsData.class);
             GuidedStepSupportFragment.addAsRoot(this, new MainStepFragment(), android.R.id.content);
         }
     }
@@ -126,12 +129,17 @@ public class SettingsActivity extends FragmentActivity {
 
     // MainStepFragment
     public static class MainStepFragment extends GuidedStepSupportFragment {
+
+        private String getStringById(int resourceId) {
+            return this.getResources().getString(resourceId);
+        }
+
         @Override
         @NonNull
         public Guidance onCreateGuidance(@NonNull Bundle savedInstanceState) {
-            String title = getResources().getString(R.string.settings_title);
-            String breadcrumb = getResources().getString(R.string.browse_title);
-            String description = getResources().getString(R.string.settings_desc);
+            String title = getStringById(R.string.settings_title);
+            String breadcrumb = getStringById(R.string.browse_title);
+            String description = getStringById(R.string.settings_desc);
             Drawable icon = getActivity().getDrawable(R.drawable.settings_icon);
 
             return new Guidance(title, description, breadcrumb, icon);
@@ -142,12 +150,12 @@ public class SettingsActivity extends FragmentActivity {
                                     Bundle savedInstanceState) {
 
             addAction(getContext(), actions, GuidedId.Oksusu.ordinal(),
-                    getResources().getString(R.string.oksususettings),
-                    getResources().getString(R.string.setdesc));
+                    getStringById(R.string.oksususettings),
+                    getStringById(R.string.setdesc));
 
             addAction(getContext(), actions, GuidedId.Pooq.ordinal(),
-                    getResources().getString(R.string.pooqsettings),
-                    getResources().getString(R.string.setdesc));
+                    getStringById(R.string.pooqsettings),
+                    getStringById(R.string.setdesc));
         }
 
         @Override
@@ -164,12 +172,17 @@ public class SettingsActivity extends FragmentActivity {
 
     // OksusuStepFragment
     public static class OksusuStepFragment extends GuidedStepSupportFragment {
+
+        private String getStringById(int resourceId) {
+            return this.getResources().getString(resourceId);
+        }
+
         @Override
         @NonNull
         public Guidance onCreateGuidance(@NonNull Bundle savedInstanceState) {
-            String title = getResources().getString(R.string.oksususettings);
-            String breadcrumb = getResources().getString(R.string.browse_title);
-            String description = getResources().getString(R.string.setdesc);
+            String title = getStringById(R.string.oksususettings);
+            String breadcrumb = getStringById(R.string.browse_title);
+            String description = getStringById(R.string.setdesc);
             Drawable icon = getActivity().getDrawable(R.drawable.oksusu_icon);
 
             return new Guidance(title, description, breadcrumb, icon);
@@ -185,31 +198,31 @@ public class SettingsActivity extends FragmentActivity {
             String oksusuPw = oksusuSettings.mPassword == null ? "" : oksusuSettings.mPassword;
 
             addEditableAction(getContext(), actions, GuidedId.OksusuId.ordinal(),
-                    getResources().getString(R.string.id), oksusuId, InputType.TYPE_CLASS_TEXT);
+                    getStringById(R.string.id), oksusuId, InputType.TYPE_CLASS_TEXT);
 
             addEditablePasswordAction(getContext(), actions, GuidedId.OksusuPw.ordinal(),
-                    getResources().getString(R.string.password), "", oksusuPw);
+                    getStringById(R.string.password), "", oksusuPw);
 
             ArrayList<GuidedAction> qualityList = new ArrayList<>();
 
             qualityList.add(new GuidedAction.Builder(getContext()).
-                    title(getResources().getString(R.string.auto)).id(GuidedId.OksusuAuto.ordinal()).build());
+                    title(getStringById(R.string.auto)).id(GuidedId.OksusuAuto.ordinal()).build());
             qualityList.add(new GuidedAction.Builder(getContext()).
-                    title(getResources().getString(R.string.fullhd)).id(GuidedId.OksusuFullHd.ordinal()).build());
+                    title(getStringById(R.string.fullhd)).id(GuidedId.OksusuFullHd.ordinal()).build());
             qualityList.add(new GuidedAction.Builder(getContext()).
-                    title(getResources().getString(R.string.hd)).id(GuidedId.OksusuHd.ordinal()).build());
+                    title(getStringById(R.string.hd)).id(GuidedId.OksusuHd.ordinal()).build());
             qualityList.add(new GuidedAction.Builder(getContext()).
-                    title(getResources().getString(R.string.sd)).id(GuidedId.OksusuSd.ordinal()).build());
+                    title(getStringById(R.string.sd)).id(GuidedId.OksusuSd.ordinal()).build());
 
             addDropDownAction(getContext(), actions, GuidedId.OksusuQuality.ordinal(),
-                    getResources().getString(R.string.quality_set), "", qualityList);
+                    getStringById(R.string.quality_set), "", qualityList);
         }
 
         @Override
         public void onCreateButtonActions(@NonNull List<GuidedAction> actions, Bundle savedInstanceState) {
             super.onCreateButtonActions(actions, savedInstanceState);
 
-            addAction(getContext(), actions, GuidedId.OksusuSave.ordinal(), getResources().getString(R.string.set_save), "");
+            addAction(getContext(), actions, GuidedId.OksusuSave.ordinal(), getStringById(R.string.set_save), "");
         }
 
         @Override
@@ -235,7 +248,7 @@ public class SettingsActivity extends FragmentActivity {
 
                 Gson gson = new Gson();
                 String myJson = gson.toJson(mSettings);
-                intent.putExtra(getResources().getString(R.string.SETTINGSDATA_STR), myJson);
+                intent.putExtra(getStringById(R.string.SETTINGSDATA_STR), myJson);
 
                 getActivity().setResult(Utils.Code.OksusuSave.ordinal(), intent);
                 getActivity().finishAfterTransition();
@@ -255,7 +268,7 @@ public class SettingsActivity extends FragmentActivity {
                 mSettings.mOksusuSettings.mQualityType = SettingsData.OksusuQualityType.SD;
             }
 
-            Utils.showToast(getContext(), mSettings.mOksusuSettings.mQualityType.toString() + " " + getResources().getString(R.string.select));
+            Utils.showToast(getContext(), mSettings.mOksusuSettings.mQualityType.toString() + " " + getStringById(R.string.select));
 
             return true;
         }
@@ -263,12 +276,17 @@ public class SettingsActivity extends FragmentActivity {
 
     // PooqStepFragment
     public static class PooqStepFragment extends GuidedStepSupportFragment {
+
+        private String getStringById(int resourceId) {
+            return this.getResources().getString(resourceId);
+        }
+
         @Override
         @NonNull
         public Guidance onCreateGuidance(@NonNull Bundle savedInstanceState) {
-            String title = getResources().getString(R.string.pooqsettings);
-            String breadcrumb = getResources().getString(R.string.browse_title);
-            String description = getResources().getString(R.string.setdesc);
+            String title = getStringById(R.string.pooqsettings);
+            String breadcrumb = getStringById(R.string.browse_title);
+            String description = getStringById(R.string.setdesc);
             Drawable icon = getActivity().getDrawable(R.drawable.pooq_icon);
 
             return new Guidance(title, description, breadcrumb, icon);
@@ -284,31 +302,31 @@ public class SettingsActivity extends FragmentActivity {
             String pw = pooqSettings.mPassword == null ? "" : pooqSettings.mPassword;
 
             addEditableAction(getContext(), actions, GuidedId.PooqId.ordinal(),
-                    getResources().getString(R.string.id), id, InputType.TYPE_CLASS_TEXT);
+                    getStringById(R.string.id), id, InputType.TYPE_CLASS_TEXT);
 
             addEditablePasswordAction(getContext(), actions, GuidedId.PooqPw.ordinal(),
-                    getResources().getString(R.string.password), "", pw);
+                    getStringById(R.string.password), "", pw);
 
             ArrayList<GuidedAction> qualityList = new ArrayList<>();
 
             qualityList.add(new GuidedAction.Builder(getContext()).
-                    title(getResources().getString(R.string.mobile)).id(GuidedId.PooqMobile.ordinal()).build());
+                    title(getStringById(R.string.mobile)).id(GuidedId.PooqMobile.ordinal()).build());
             qualityList.add(new GuidedAction.Builder(getContext()).
-                    title(getResources().getString(R.string.sd)).id(GuidedId.PooqSD.ordinal()).build());
+                    title(getStringById(R.string.sd)).id(GuidedId.PooqSD.ordinal()).build());
             qualityList.add(new GuidedAction.Builder(getContext()).
-                    title(getResources().getString(R.string.hd)).id(GuidedId.PooqHD.ordinal()).build());
+                    title(getStringById(R.string.hd)).id(GuidedId.PooqHD.ordinal()).build());
             qualityList.add(new GuidedAction.Builder(getContext()).
-                    title(getResources().getString(R.string.fullhd)).id(GuidedId.PooqFHD.ordinal()).build());
+                    title(getStringById(R.string.fullhd)).id(GuidedId.PooqFHD.ordinal()).build());
 
             addDropDownAction(getContext(), actions, GuidedId.PooqQuality.ordinal(),
-                    getResources().getString(R.string.quality_set), "", qualityList);
+                    getStringById(R.string.quality_set), "", qualityList);
         }
 
         @Override
         public void onCreateButtonActions(@NonNull List<GuidedAction> actions, Bundle savedInstanceState) {
             super.onCreateButtonActions(actions, savedInstanceState);
 
-            addAction(getContext(), actions, GuidedId.PooqSave.ordinal(), getResources().getString(R.string.set_save), "");
+            addAction(getContext(), actions, GuidedId.PooqSave.ordinal(), getStringById(R.string.set_save), "");
         }
 
         @Override
@@ -334,7 +352,7 @@ public class SettingsActivity extends FragmentActivity {
 
                 Gson gson = new Gson();
                 String myJson = gson.toJson(mSettings);
-                intent.putExtra(getResources().getString(R.string.SETTINGSDATA_STR), myJson);
+                intent.putExtra(getStringById(R.string.SETTINGSDATA_STR), myJson);
 
                 getActivity().setResult(Utils.Code.PooqSave.ordinal(), intent);
                 getActivity().finishAfterTransition();
@@ -354,7 +372,7 @@ public class SettingsActivity extends FragmentActivity {
                 mSettings.mPooqSettings.mQualityType = SettingsData.PooqQualityType.FHD;
             }
 
-            Utils.showToast(getContext(), mSettings.mPooqSettings.mQualityType.toString() + " " + getResources().getString(R.string.select));
+            Utils.showToast(getContext(), mSettings.mPooqSettings.mQualityType.toString() + " " + getStringById(R.string.select));
 
             return true;
         }

@@ -24,6 +24,7 @@
 
 package com.ksi.alltv;
 
+import android.content.Intent;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
@@ -31,18 +32,18 @@ import android.support.v17.leanback.widget.OnItemViewClickedListener;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
-
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
 
+import static android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP;
+
 
 public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment implements OnItemViewClickedListener {
+
+    private static final String TAG = OksusuRowSupportFragment.class.getSimpleName();
+    private int mCnt = 0;
 
     private static SettingsData.OksusuQualityType mQualityType = SettingsData.OksusuQualityType.AUTO;
 
@@ -75,26 +76,33 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
         AllTvBaseRowsSupportFragment.clearAllVideoUrl(Utils.SiteType.Oksusu);
     }
 
+    public static void updateFavoriteList(ArrayList<String> favorites) {
+        AllTvBaseRowsSupportFragment.updateFavoriteList(Utils.SiteType.Oksusu, favorites);
+    }
+
     @Override
     public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item,
                               RowPresenter.ViewHolder rowViewHolder, Row row) {
-
         if (item instanceof ChannelData) {
-
-            if (PlayerActivity.active) {
-                return;
-            }
-
-            String authKey = mAuthKey.get(mType);
-
+            String authKey = ((ChannelData) item).getAuthkey();;
             if (authKey == null || authKey.length() < 10) {
                 Utils.showToast(getContext(), getStringById(R.string.nologin_error));
                 return;
             }
-
-            OksusuFetchVideoUrlTask runTask = new OksusuFetchVideoUrlTask();
-            runTask.execute(mChannels.get(mType).indexOf(item));
+            playVideo(mChannels.get(mType).indexOf(item));
         }
+    }
+
+    private void playVideo(int currentChannel) {
+        if (PlayerActivity.active) return;
+
+        int requestCode = Utils.Code.OksusuPlay.ordinal();
+        Intent intent = new Intent(getActivity(), PlayerActivity.class);
+        intent.addFlags(FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels.get(mType));
+        intent.putExtra(getStringById(R.string.CURRENTCHANNEL_STR), currentChannel);
+
+        getActivity().startActivityForResult(intent, requestCode);
     }
 
     @Override
@@ -103,7 +111,7 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
         mRowsAdapter.clear();
 
         if (isEmptyCategory(mType)) {
-            createDefaultRows(getStringById(R.string.dologin_please));
+            createDefaultRows();
             getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
             return;
         }
@@ -128,106 +136,27 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
 
             HeaderItem headerItem = new HeaderItem(ctData.getTitle());
 
-            mRowsAdapter.add(new ListRow(headerItem, adapter));
+            if(adapter.size() > 0)
+                mRowsAdapter.add(new ListRow(headerItem, adapter));
         }
 
-        if (getMainFragmentAdapter() != null)
+        if(getMainFragmentAdapter() != null)
             getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
     }
 
-
-    private class OksusuFetchVideoUrlTask extends FetchVideoUrlTask {
-
-        protected Integer doInBackground(Integer... channelIndex) {
-            try {
-                getFragmentManager().beginTransaction().add(R.id.main_browse_fragment, mSpinnerFragment).commit();
-
-                String authKey = mAuthKey.get(mType);
-                ArrayList<ChannelData> chList = mChannels.get(mType);
-
-                if (authKey == null || authKey.length() < 10)
-                    return Utils.Code.NoAuthKey_err.ordinal();
-
-                int arrIndex = channelIndex[0];
-
-                String url = getStringById(R.string.OKSUSUVIDEO_URL) + String.valueOf(chList.get(arrIndex).getId());
-
-                HttpRequest request = HttpRequest.get(url)
-                        .userAgent("Mozilla/4.0")
-                        .header(getStringById(R.string.COOKIE_STR), authKey);
-
-                if (request.isBodyEmpty()) {
-                    return Utils.Code.NoVideoUrl_err.ordinal();
-                }
-
-                String resultBody = request.body();
-                String progInfo = null;
-
-                if (resultBody.contains(getStringById(R.string.CONTENTINFO_STR))) {
-
-                    String jsonStr = resultBody.substring(resultBody.indexOf(getStringById(R.string.CONTENTINFO_STR)) + 14,
-                            resultBody.indexOf(getStringById(R.string.OKSUSUJSONSUB_STR)));
-
-                    JsonParser jsonParser = new JsonParser();
-                    JsonElement jsonElement = jsonParser.parse(jsonStr);
-
-                    String videoUrl = Utils.removeQuote(jsonElement.getAsJsonObject().get(getStringById(R.string.STREAMURL_STR))
-                            .getAsJsonObject().get(getQualityTag()).toString());
-
-                    JsonArray array = jsonElement.getAsJsonObject().get("channel").getAsJsonObject().getAsJsonArray("another_programs");
-
-                    JsonArray progArray = new JsonArray();
-
-                    for (int i = 0; i < array.size(); i++) {
-
-                        String name = array.get(i).getAsJsonObject().get("programName").getAsString();
-                        String stime = array.get(i).getAsJsonObject().get("startTimeYMDHIS").getAsString();
-                        String etime = array.get(i).getAsJsonObject().get("endTimeYMDHIS").getAsString();
-
-                        JsonObject item = new JsonObject();
-
-                        item.addProperty("name", name);
-                        item.addProperty("stime", stime);
-                        item.addProperty("etime", etime);
-
-                        progArray.add(item);
-                    }
-
-                    progInfo = progArray.toString();
-
-                    if (videoUrl.equals("null") || videoUrl.length() == 0) {
-                        return Utils.Code.NoVideoUrl_err.ordinal();
-                    }
-
-                    setVideoUrlByIndex(mType, arrIndex, videoUrl);
-
-                } else {
-                    return Utils.Code.NoVideoUrl_err.ordinal();
-                }
-
-                playVideo(chList.get(arrIndex), progInfo);
-
-                return Utils.Code.FetchVideoUrlTask_OK.ordinal();
-            } catch (Exception ex) {
-                return Utils.Code.NoVideoUrl_err.ordinal();
-            } finally {
-
-            }
-        }
-
-        private String getQualityTag() {
-            switch (mQualityType) {
-                case AUTO:
-                    return getStringById(R.string.URLAUTO_STR);
-                case FullHD:
-                    return getStringById(R.string.URLFHD_STR);
-                case HD:
-                    return getStringById(R.string.URLHD_STR);
-                case SD:
-                    return getStringById(R.string.URLSD_STR);
-            }
-
-            return getStringById(R.string.URLAUTO_STR);
-        }
+    @Override
+    public void refreshRows() {
+        mRowsAdapter.notifyArrayItemRangeChanged(0, mRowsAdapter.size());
     }
+
+    @Override
+    public void sendChannelData() {
+        Intent intent = new Intent(getActivity(), PlayerActivity.class);
+        intent.addFlags(FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels.get(mType));
+
+        getActivity().startActivity(intent);
+    }
+
 }
+

@@ -39,16 +39,20 @@ public class LicensesDialogFragment extends DialogFragment {
         return new LicensesDialogFragment();
     }
 
+    private String getStringById(int resourceId) {
+        return this.getResources().getString(resourceId);
+    }
+
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         WebView view = (WebView) LayoutInflater.from(getActivity()).inflate(R.layout.dialog_licenses, null);
-        view.loadUrl(getResources().getString(R.string.LICENSE_URL));
+        view.loadUrl(getStringById(R.string.LICENSE_URL));
         view.getSettings().setUseWideViewPort(true);
         view.getSettings().setLoadWithOverviewMode(true);
 
         return new AlertDialog.Builder(getActivity(), R.style.Theme_AppCompat_Light_Dialog_Alert)
-                .setTitle(getResources().getString(R.string.opensource))
+                .setTitle(getStringById(R.string.opensource))
                 .setView(view)
                 .setPositiveButton(android.R.string.ok, null)
                 .create();

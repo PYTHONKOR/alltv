@@ -1,6 +1,7 @@
 <resources>
     <string name="USERAGENT">Mozilla/5.0 (Linux; Android 4.4.2; sdk Build/KK) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/30.0.0.0 Mobile Safari/537.36</string>
-    <string name="OKSUSU_CHANNEL_URL">http://www.oksusu.com/api/live/organization/list?synopsysYn=Y</string>
+    <string name="OKSUSU_CHANNEL_URL">https://www.oksusu.com/api/live/organization/list?synopsysYn=Y</string>
+    <string name="OKSUSU_EPG_URL">http://www.oksusu.com/api/live/channel</string>
     <string name="CHANNELS_TAG">channels</string>
     <string name="JSONCATEGORY_TAG">commonGenre</string>
     <string name="AUTOURL_TAG">hlsUrlPhoneAUTO</string>
@@ -46,6 +47,7 @@
     <string name="POOQ_CATEGORY_STR">pooqcategory</string>
     <string name="POOQ_LOGIN_URL">https://wapie.pooq.co.kr/v1/login30</string>
     <string name="POOQ_CHANNELLIST_URL">https://wapie.pooq.co.kr/v1/livesgenresort30</string>
+    <string name="POOQ_EPG_URL">https://apis.pooq.co.kr/live/epgs</string>
     <string name="POOQ_API_ACCESSKEY_STR">E5F3E0D30947AA5440556471321BB6D9</string>
     <string name="ID_STR">id</string>
     <string name="CREDENTIAL_STR">apiAccessCredential</string>
@@ -74,6 +76,7 @@
     <string name="AUTHKEY_STR">authkey</string>
     <string name="SETTINGS_STR">Settings</string>
     <string name="UNDER19CONTENT_TAG">under19Content</string>
+    <string name="ADULTCONTENT_TAG">adultContent</string>
     <string name="OKSUSULOGO_URL">http://image.oksusu.com:8080/thumbnails/image/0_0_F20/live/logo/387/</string>
     <string name="CHANNELIMAGENAME_TAG">channelImageName</string>
     <string name="POOQ_MOBILE_QUALITY_TAG">500</string>
@@ -81,8 +84,10 @@
     <string name="POOQ_HD_QUALITY_TAG">2000</string>
     <string name="POOQ_FHD_QUALITY_TAG">5000</string>
     <string name="ISRADIO_TAG">isRadio</string>
+    <string name="TARGETAGE_TAG">targetage</string>
     <string name="YES_STR">Y</string>
     <string name="RETURNCODE_TAG">returnCode</string>
+    <string name="CURRENTCHANNEL_STR">currentChannel</string>
     <string name="UPDATE_JSON_URL">https://raw.githubusercontent.com/PYTHONKOR/alltv/master/Source/version.json</string>
     <string name="PATCHED_STR">PatchedVersion</string>
     <string name="TIME_FORMAT_STR">yyyyMMddHHmm00</string>
@@ -90,9 +95,7 @@
     <string name="ETIME_STR">etime</string>
     <string name="NAME_STR">name</string>
     <string name="CURRENT_TIME_FORMAT_STR">HH:mm</string>
-
     <integer name="GRID_ITEM_WIDTH">300</integer>
     <integer name="GRID_ITEM_HEIGHT">200</integer>
     <integer name="POOQ_SUCCESS_CODE">200</integer>
-
 </resources>
