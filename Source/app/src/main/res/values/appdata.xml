@@ -95,6 +95,8 @@
     <string name="ETIME_STR">etime</string>
     <string name="NAME_STR">name</string>
     <string name="CURRENT_TIME_FORMAT_STR">HH:mm</string>
+    <string name="UTF8_STR">UTF-8</string>
+
     <integer name="GRID_ITEM_WIDTH">300</integer>
     <integer name="GRID_ITEM_HEIGHT">200</integer>
     <integer name="POOQ_SUCCESS_CODE">200</integer>
