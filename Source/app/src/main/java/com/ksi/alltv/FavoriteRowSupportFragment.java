@@ -28,6 +28,7 @@ import android.content.Intent;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
+import android.support.v17.leanback.widget.ListRowPresenter;
 import android.support.v17.leanback.widget.OnItemViewClickedListener;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.Row;
@@ -52,8 +53,7 @@ public class FavoriteRowSupportFragment extends AllTvBaseRowsSupportFragment imp
     public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item,
                               RowPresenter.ViewHolder rowViewHolder, Row row) {
         if (item instanceof ChannelData) {
-            String authKey = ((ChannelData) item).getAuthkey();
-
+            String authKey = ((ChannelData) item).getAuthkey();;
             if (authKey == null || authKey.length() < 10) {
                 Utils.showToast(getContext(), getStringById(R.string.nologin_error));
                 return;
@@ -68,7 +68,7 @@ public class FavoriteRowSupportFragment extends AllTvBaseRowsSupportFragment imp
         int requestCode = Utils.Code.FavoritePlay.ordinal();
         Intent intent = new Intent(getActivity(), PlayerActivity.class);
         intent.addFlags(FLAG_ACTIVITY_SINGLE_TOP);
-        intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels.get(mType));
+        intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_STR), mChannels.get(mType));
         intent.putExtra(getStringById(R.string.CURRENTCHANNEL_STR), currentChannel);
 
         getActivity().startActivityForResult(intent, requestCode);
@@ -79,7 +79,9 @@ public class FavoriteRowSupportFragment extends AllTvBaseRowsSupportFragment imp
 
         mRowsAdapter.clear();
 
-        if (isEmptyCategory(Utils.SiteType.Oksusu) && isEmptyCategory(Utils.SiteType.Pooq)) {
+        if (isEmptyCategory(Utils.SiteType.Oksusu) &&
+            isEmptyCategory(Utils.SiteType.Pooq) &&
+            isEmptyCategory(Utils.SiteType.Tving)) {
             return;
         }
 
@@ -89,60 +91,156 @@ public class FavoriteRowSupportFragment extends AllTvBaseRowsSupportFragment imp
         ArrayList<ChannelData> chList;
         ArrayList<ChannelData> chFavorites = new ArrayList<>();
 
-        if (mChannels.get(Utils.SiteType.Pooq) != null) {
-            chList = mChannels.get(Utils.SiteType.Pooq);
+        chList = mChannels.get(Utils.SiteType.Pooq);
+
+        if(mEnable.get(Utils.SiteType.Pooq) == Boolean.TRUE && chList != null) {
             adapter = new ArrayObjectAdapter(presenterSelector);
+            int index = 0;
 
             for (int i = 0; i < chList.size(); i++) {
-                ChannelData data = new ChannelData(chList.get(i));
-                if (data.getFavorite() > 0) {
-                    data.setFavorite(3);
-                    chFavorites.add(data);
-                    adapter.add(data);
-                }
-            }
-            if (adapter.size() > 0)
-                mRowsAdapter.add(new ListRow(new HeaderItem("POOQ"), adapter));
-        }
-
-        if (mChannels.get(Utils.SiteType.Oksusu) != null) {
-            chList = mChannels.get(Utils.SiteType.Oksusu);
-            adapter = new ArrayObjectAdapter(presenterSelector);
-
-            for (int i = 0; i < chList.size(); i++) {
-                ChannelData data = new ChannelData(chList.get(i));
-                if (data.getFavorite() > 0) {
+                if (chList.get(i).getFavorite() > 0) {
+                    ChannelData data = new ChannelData(chList.get(i));
                     data.setFavorite(2);
+                    data.setItemIndex(index++);
                     chFavorites.add(data);
                     adapter.add(data);
                 }
             }
             if (adapter.size() > 0)
-                mRowsAdapter.add(new ListRow(new HeaderItem("옥수수"), adapter));
+                mRowsAdapter.add(new ListRow(new HeaderItem(getStringById(R.string.pooq)), adapter));
         }
 
-        if (chFavorites.size() == 0) {
+        chList = mChannels.get(Utils.SiteType.Tving);
+
+        if(mEnable.get(Utils.SiteType.Tving) == Boolean.TRUE && chList != null) {
             adapter = new ArrayObjectAdapter(presenterSelector);
-            mRowsAdapter.add(new ListRow(new HeaderItem("선호채널을 등록해 주세요."), adapter));
+            int index = 0;
+
+            for (int i = 0; i < chList.size(); i++) {
+                if (chList.get(i).getFavorite() > 0) {
+                    ChannelData data = new ChannelData(chList.get(i));
+                    data.setFavorite(3);
+                    data.setItemIndex(index++);
+                    chFavorites.add(data);
+                    adapter.add(data);
+                }
+            }
+            if (adapter.size() > 0)
+                mRowsAdapter.add(new ListRow(new HeaderItem(getStringById(R.string.tving)), adapter));
+        }
+
+        chList = mChannels.get(Utils.SiteType.Oksusu);
+
+        if(mEnable.get(Utils.SiteType.Oksusu) == Boolean.TRUE && chList != null) {
+            adapter = new ArrayObjectAdapter(presenterSelector);
+            int index = 0;
+
+            for (int i = 0; i < chList.size(); i++) {
+                if (chList.get(i).getFavorite() > 0) {
+                    ChannelData data = new ChannelData(chList.get(i));
+                    data.setFavorite(4);
+                    data.setItemIndex(index++);
+                    chFavorites.add(data);
+                    adapter.add(data);
+                }
+            }
+            if (adapter.size() > 0)
+                mRowsAdapter.add(new ListRow(new HeaderItem(getStringById(R.string.oksusu)), adapter));
+        }
+
+        if(chFavorites.size() == 0) {
+            adapter = new ArrayObjectAdapter(presenterSelector);
+            mRowsAdapter.add(new ListRow(new HeaderItem(getStringById(R.string.favorite_select)), adapter));
         }
 
         AllTvBaseRowsSupportFragment.setChannelList(Utils.SiteType.Favorite, chFavorites);
 
-        if (getMainFragmentAdapter() != null)
+        if(getMainFragmentAdapter() != null)
             getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
     }
 
     @Override
     public void refreshRows() {
+
+        ArrayList<ChannelData> chList;
+        ArrayList<ChannelData> chFavorites = mChannels.get(mType);
+
+        int index = 0;
+
+        chList = mChannels.get(Utils.SiteType.Pooq);
+        if(mEnable.get(Utils.SiteType.Pooq) == Boolean.TRUE && chList != null) {
+            for (int i = 0; i < chList.size(); i++) {
+                if (chList.get(i).getFavorite() > 0) {
+                    ChannelData data = chFavorites.get(index++);
+                    data.setEPG(chList.get(i).getEPG(), true);
+                }
+            }
+        }
+        chList = mChannels.get(Utils.SiteType.Tving);
+        if(mEnable.get(Utils.SiteType.Tving) == Boolean.TRUE && chList != null) {
+            for (int i = 0; i < chList.size(); i++) {
+                if (chList.get(i).getFavorite() > 0) {
+                    ChannelData data = chFavorites.get(index++);
+                    data.setEPG(chList.get(i).getEPG(), true);
+                }
+            }
+        }
+        chList = mChannels.get(Utils.SiteType.Oksusu);
+        if(mEnable.get(Utils.SiteType.Oksusu) == Boolean.TRUE && chList != null) {
+            for (int i = 0; i < chList.size(); i++) {
+                if (chList.get(i).getFavorite() > 0) {
+                    ChannelData data = chFavorites.get(index++);
+                    data.setEPG(chList.get(i).getEPG(), true);
+                }
+            }
+        }
+
         mRowsAdapter.notifyArrayItemRangeChanged(0, mRowsAdapter.size());
+        setSelectedPosition(mRowIndex, true, new ListRowPresenter.SelectItemViewHolderTask(mItemIndex));
     }
 
     @Override
     public void sendChannelData() {
+
+        ArrayList<ChannelData> chList;
+        ArrayList<ChannelData> chFavorites = mChannels.get(mType);
+
+        int index = 0;
+
+        chList = mChannels.get(Utils.SiteType.Pooq);
+        if(mEnable.get(Utils.SiteType.Pooq) == Boolean.TRUE && chList != null) {
+            for (int i = 0; i < chList.size(); i++) {
+                if (chList.get(i).getFavorite() > 0) {
+                    ChannelData data = chFavorites.get(index++);
+                    data.setEPG(chList.get(i).getEPG(), true);
+                }
+            }
+        }
+        chList = mChannels.get(Utils.SiteType.Tving);
+        if(mEnable.get(Utils.SiteType.Tving) == Boolean.TRUE && chList != null) {
+            for (int i = 0; i < chList.size(); i++) {
+                if (chList.get(i).getFavorite() > 0) {
+                    ChannelData data = chFavorites.get(index++);
+                    data.setEPG(chList.get(i).getEPG(), true);
+                }
+            }
+        }
+        chList = mChannels.get(Utils.SiteType.Oksusu);
+        if(mEnable.get(Utils.SiteType.Oksusu) == Boolean.TRUE && chList != null) {
+            for (int i = 0; i < chList.size(); i++) {
+                if (chList.get(i).getFavorite() > 0) {
+                    ChannelData data = chFavorites.get(index++);
+                    data.setEPG(chList.get(i).getEPG(), true);
+                }
+            }
+        }
+
         Intent intent = new Intent(getActivity(), PlayerActivity.class);
         intent.addFlags(FLAG_ACTIVITY_SINGLE_TOP);
-        intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels.get(mType));
+        intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_STR), mChannels.get(mType));
 
         getActivity().startActivity(intent);
     }
+
 }
+

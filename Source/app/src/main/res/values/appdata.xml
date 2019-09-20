@@ -1,8 +1,13 @@
 <resources>
     <string name="USERAGENT">Mozilla/5.0 (Linux; Android 4.4.2; sdk Build/KK) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/30.0.0.0 Mobile Safari/537.36</string>
+    <string name="CHANNELS_STR">channels</string>
+    <string name="CATEGORY_STR">category</string>
+    <string name="AUTHKEY_STR">authkey</string>
+    <string name="OKSUSU_CHANNELS_STR">oksusuchannels</string>
+    <string name="POOQ_CHANNELS_STR">pooqchannels</string>
+    <string name="TVING_CHANNELS_STR">tvingchannels</string>
     <string name="OKSUSU_CHANNEL_URL">https://www.oksusu.com/api/live/organization/list?synopsysYn=Y</string>
     <string name="OKSUSU_EPG_URL">http://www.oksusu.com/api/live/channel</string>
-    <string name="CHANNELS_TAG">channels</string>
     <string name="JSONCATEGORY_TAG">commonGenre</string>
     <string name="AUTOURL_TAG">hlsUrlPhoneAUTO</string>
     <string name="CHANNELNAME_TAG">channelName</string>
@@ -13,7 +18,6 @@
     <string name="CHANNELCATEGORY_TAG">genreCd</string>
     <string name="CATEGORYNO_TAG">cdNo</string>
     <string name="CATEGORYTITLE_TAG">cdName</string>
-    <string name="CATEGORY_TAG">category</string>
     <string name="OKSUSU_LOGIN_URL">https://www.oksusu.com/user/login</string>
     <string name="USERID_STR">userId</string>
     <string name="PASSWORD_STR">password</string>
@@ -27,8 +31,7 @@
     <string name="SETCOOKIE_STR">Set-Cookie</string>
     <string name="FETCHCHANNELRESULTRECEIVER_STR">FetchChannelResultReceiver</string>
     <string name="SETTINGSDATA_STR">SettingsData</string>
-    <string name="OKSUSU_CHANNELS_STR">oksusuchannels</string>
-    <string name="OKSUSUAUTHKEY_STR">OksusuAuthKey</string>
+    <string name="FETCHMODE_STR">FetchMode</string>
     <string name="LICENSE_URL">file:///android_asset/open_source_licenses.html</string>
     <string name="PLAYCHANNEL_STR">PlayChannel</string>
     <string name="PLAYINFO_STR">PlayInfo</string>
@@ -42,17 +45,13 @@
     <string name="URLFHD_STR">urlFHD</string>
     <string name="URLHD_STR">urlHD</string>
     <string name="URLSD_STR">urlSD</string>
-    <string name="OKSUSU_CATEGORY_STR">oksusucategory</string>
-    <string name="POOQ_CHANNELS_STR">pooqchannels</string>
-    <string name="POOQ_CATEGORY_STR">pooqcategory</string>
-    <string name="POOQ_LOGIN_URL">https://wapie.pooq.co.kr/v1/login30</string>
-    <string name="POOQ_CHANNELLIST_URL">https://wapie.pooq.co.kr/v1/livesgenresort30</string>
-    <string name="POOQ_EPG_URL">https://apis.pooq.co.kr/live/epgs</string>
+    <string name="POOQ_LOGIN_URL">https://wapie.wavve.com/v1/login30</string>
+    <string name="POOQ_CHANNELLIST_URL">https://wapie.wavve.com/v1/livesgenresort30</string>
+    <string name="POOQ_EPG_URL">https://apis.wavve.com/live/epgs</string>
     <string name="POOQ_API_ACCESSKEY_STR">E5F3E0D30947AA5440556471321BB6D9</string>
     <string name="ID_STR">id</string>
     <string name="CREDENTIAL_STR">apiAccessCredential</string>
-    <string name="POOQAUTHKEY_STR">pooqauthkey</string>
-    <string name="POOQ_CHANNEL_URL">https://wapie.pooq.co.kr/v1/lives30/</string>
+    <string name="POOQ_CHANNEL_URL">https://wapie.wavve.com/v1/lives30/</string>
     <string name="URL_STR">url</string>
     <string name="DEVICETYPEID_STR">deviceTypeId</string>
     <string name="PC_STR">pc</string>
@@ -73,7 +72,6 @@
     <string name="TITLENAME_STR">title</string>
     <string name="MODE_STR">mode</string>
     <string name="SITETYPE_STR">sitetype</string>
-    <string name="AUTHKEY_STR">authkey</string>
     <string name="SETTINGS_STR">Settings</string>
     <string name="UNDER19CONTENT_TAG">under19Content</string>
     <string name="ADULTCONTENT_TAG">adultContent</string>
@@ -87,6 +85,10 @@
     <string name="TARGETAGE_TAG">targetage</string>
     <string name="YES_STR">Y</string>
     <string name="RETURNCODE_TAG">returnCode</string>
+    <string name="TVING_MD_QUALITY_TAG">stream25</string>
+    <string name="TVING_SD_QUALITY_TAG">stream30</string>
+    <string name="TVING_HD_QUALITY_TAG">stream40</string>
+    <string name="TVING_FHD_QUALITY_TAG">stream50</string>
     <string name="CURRENTCHANNEL_STR">currentChannel</string>
     <string name="UPDATE_JSON_URL">https://raw.githubusercontent.com/PYTHONKOR/alltv/master/Source/version.json</string>
     <string name="PATCHED_STR">PatchedVersion</string>
@@ -95,8 +97,6 @@
     <string name="ETIME_STR">etime</string>
     <string name="NAME_STR">name</string>
     <string name="CURRENT_TIME_FORMAT_STR">HH:mm</string>
-    <string name="UTF8_STR">UTF-8</string>
-
     <integer name="GRID_ITEM_WIDTH">300</integer>
     <integer name="GRID_ITEM_HEIGHT">200</integer>
     <integer name="POOQ_SUCCESS_CODE">200</integer>

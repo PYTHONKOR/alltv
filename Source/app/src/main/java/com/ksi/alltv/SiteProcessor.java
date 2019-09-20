@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 PYTHONKOR
+* Copyright (c) 2019 PYTHONKOR
 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,17 +44,11 @@ public abstract class SiteProcessor {
     }
 
     public abstract boolean doProcess(SettingsData inSettingsData);
-
-    public abstract int getChannelStrId();
-
-    public abstract int getCategoryStrId();
-
-    public abstract int getAuthKeyStrId();
+    public abstract boolean updateProcess();
 
     public final String getAuthKey() {
         return mAuthKey;
     }
-
     public final void setAuthKey(String authkey) {
         mAuthKey = authkey;
     }
@@ -67,11 +61,20 @@ public abstract class SiteProcessor {
         return mContext.getResources().getInteger(resourceId);
     }
 
+    public void setChannelList(ArrayList<ChannelData> channelList) {
+        mChannelDatas.clear();
+        mChannelDatas = channelList;
+    }
+
     public ArrayList<ChannelData> getChannelList() {
         return mChannelDatas;
     }
 
-    public ArrayList<CategoryData> getCategorylList() {
-        return mCategoryDatas;
+    public void setCategorylList(ArrayList<CategoryData> categorylList) {
+        mCategoryDatas.clear();
+        mCategoryDatas = categorylList;
     }
+
+    public ArrayList<CategoryData> getCategorylList() { return mCategoryDatas; }
+
 }

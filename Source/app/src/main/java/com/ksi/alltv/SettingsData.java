@@ -24,16 +24,10 @@
 
 package com.ksi.alltv;
 
-
 public class SettingsData {
     public OksusuSettingsData mOksusuSettings = new OksusuSettingsData();
     public PooqSettingsData mPooqSettings = new PooqSettingsData();
-
-    public void setOksusuSettings(OksusuSettingsData inData) {
-        mOksusuSettings.mId = inData.mId;
-        mOksusuSettings.mPassword = inData.mPassword;
-        mOksusuSettings.mQualityType = inData.mQualityType;
-    }
+    public TvingSettingsData mTvingSettings = new TvingSettingsData();
 
     enum OksusuQualityType {
         AUTO, FullHD, HD, SD
@@ -43,7 +37,12 @@ public class SettingsData {
         Mobile, SD, HD, FHD
     }
 
+    enum TvingQualityType {
+        MD, SD, HD, FHD
+    }
+
     public class BaseSettingsData {
+        public boolean mEnable = false;
         public String mId = new String();
         public String mPassword = new String();
     }
@@ -55,4 +54,10 @@ public class SettingsData {
     public class PooqSettingsData extends BaseSettingsData {
         public PooqQualityType mQualityType = PooqQualityType.Mobile;
     }
+
+    public class TvingSettingsData extends BaseSettingsData {
+        public boolean mCJOneId = true;
+        public TvingQualityType mQualityType = TvingQualityType.SD;
+    }
+
 }

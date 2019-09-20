@@ -30,12 +30,20 @@ import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
+import android.support.v17.leanback.widget.OnItemViewClickedListener;
+import android.support.v17.leanback.widget.OnItemViewSelectedListener;
+import android.support.v17.leanback.widget.Presenter;
+import android.support.v17.leanback.widget.Row;
+import android.support.v17.leanback.widget.RowPresenter;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 
-public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
+public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment implements OnItemViewSelectedListener {
+
+    private static final String TAG = AllTvBaseRowsSupportFragment.class.getSimpleName();
 
     protected ArrayObjectAdapter mRowsAdapter;
     protected Utils.SiteType mType = Utils.SiteType.None;
@@ -43,10 +51,15 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
     protected static HashMap<Utils.SiteType, ArrayList<ChannelData>> mChannels = new HashMap<>();
     protected static HashMap<Utils.SiteType, ArrayList<CategoryData>> mCategory = new HashMap<>();
     protected static HashMap<Utils.SiteType, String> mAuthKey = new HashMap<>();
+    protected static HashMap<Utils.SiteType, Boolean> mEnable = new HashMap<>();
+
+    protected static int mRowIndex = 0;
+    protected static int mItemIndex = 0;
 
     public AllTvBaseRowsSupportFragment() {
         mRowsAdapter = new ArrayObjectAdapter(new ListRowPresenter());
         setAdapter(mRowsAdapter);
+        setOnItemViewSelectedListener(this);
     }
 
     @Override
@@ -58,6 +71,24 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
     @Override
     public void setExpand(boolean expand) {
         super.setExpand(true);
+    }
+
+    @Override
+    public void onItemSelected(Presenter.ViewHolder itemViewHolder, Object item,
+                               RowPresenter.ViewHolder rowViewHolder, Row row) {
+
+        if(rowViewHolder.getSelectedItem() != null) {
+            ChannelData channelData = (ChannelData)rowViewHolder.getSelectedItem();
+
+            mRowIndex = getSelectedPosition();
+            mItemIndex = channelData.getItemIndex();
+
+            // Log.e(TAG, "onItemSelected: row: " + Integer.toString(mRowIndex) + ", Cnt: " + Integer.toString(mItemIndex));
+        } else {
+            mRowIndex = 0;
+            mItemIndex = 0;
+        }
+
     }
 
     protected String getStringById(int resourceId) {
@@ -89,41 +120,51 @@ public abstract class AllTvBaseRowsSupportFragment extends RowsSupportFragment {
         return mAuthKey.get(type);
     }
 
-    protected void setVideoUrlByIndex(Utils.SiteType type, int index, String videoUrl) {
-        mChannels.get(type).get(index).setVideoUrl(videoUrl);
+    public static void setEnable(Utils.SiteType type, Boolean enable) {
+        mEnable.put(type, enable);
     }
 
-    public static void clearAllVideoUrl(Utils.SiteType type) {
-        ArrayList<ChannelData> chList = mChannels.get(type);
-
-        if (chList == null)
-            return;
-
-        for (ChannelData chData : chList) {
-            chData.setVideoUrl(null);
-        }
+    public static Boolean getEnable(Utils.SiteType type) {
+        return mEnable.get(type);
     }
 
-    public static void updateFavoriteList(Utils.SiteType type, ArrayList<String> favorites) {
+    public static boolean updateFavoriteList(Utils.SiteType type, ArrayList<String> favorites) {
+
         ArrayList<ChannelData> chList = mChannels.get(type);
 
-        if (chList == null)
-            return;
+        if(chList == null)
+            return false;
 
-        for (int i = 0; i < chList.size(); i++) {
+        boolean updated = false;
+
+        for(int i=0; i<chList.size(); i++) {
+
+            int favorite = chList.get(i).getFavorite();
             chList.get(i).setFavorite(0);
-            for (int j = 0; j < favorites.size(); j++) {
-                if (chList.get(i).getId().compareTo(favorites.get(j)) == 0) {
+
+            for(int j=0; j<favorites.size(); j++) {
+                if(chList.get(i).getId().compareTo(favorites.get(j)) == 0) {
                     chList.get(i).setFavorite(1);
                 }
             }
+
+            if(chList.get(i).getFavorite() != favorite) updated = true;
+        }
+
+        return updated;
+    }
+
+    public static void updateEPG(Utils.SiteType type, ArrayList<ChannelData> chList) {
+
+        ArrayList<ChannelData> channels = mChannels.get(type);
+
+        for(int i=0; i<channels.size(); i++) {
+            channels.get(i).setEPG(chList.get(i).getEPG());
         }
     }
 
     public abstract void createRows();
-
     public abstract void refreshRows();
-
     public abstract void sendChannelData();
 
     protected void createDefaultRows() {

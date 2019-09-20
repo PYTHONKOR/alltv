@@ -15,7 +15,6 @@ public class EPGData implements Parcelable {
     public String getProgramName() {
         return mProgramName;
     }
-
     public void setProgramName(String name) {
         this.mProgramName = name;
     }
@@ -23,7 +22,6 @@ public class EPGData implements Parcelable {
     public Date getStartTime() {
         return mStartTime;
     }
-
     public void setStartTime(Date date) {
         this.mStartTime = date;
     }
@@ -31,7 +29,6 @@ public class EPGData implements Parcelable {
     public Date getEndTime() {
         return mEndTime;
     }
-
     public void setEndTime(Date date) {
         this.mEndTime = date;
     }
@@ -39,7 +36,6 @@ public class EPGData implements Parcelable {
     public Boolean isAdultContent() {
         return mAdultContent;
     }
-
     public void setAdultContent(Boolean value) {
         this.mAdultContent = value;
     }
@@ -90,8 +86,8 @@ public class EPGData implements Parcelable {
 
     protected EPGData(Parcel in) {
         this.mProgramName = in.readString();
-        this.mStartTime = (Date) in.readSerializable();
-        this.mEndTime = (Date) in.readSerializable();
+        this.mStartTime = (Date)in.readSerializable();
+        this.mEndTime = (Date)in.readSerializable();
         this.mAdultContent = (in.readByte() != 0);
     }
 

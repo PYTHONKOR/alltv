@@ -24,6 +24,7 @@
 
 package com.ksi.alltv;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Point;
@@ -34,6 +35,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 
+import android.util.Base64;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -52,15 +54,25 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
+import java.security.Key;
+import java.security.spec.AlgorithmParameterSpec;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.DESedeKeySpec;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 
 public class PlayerActivity extends FragmentActivity implements Player.EventListener, Target {
@@ -69,6 +81,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
     static boolean active = false;
 
+    private Activity mContext;
     private PlayerView mPlayerView;
     private SimpleExoPlayer mPlayer;
 
@@ -84,6 +97,12 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
     private boolean isLongPressed = false;
     private boolean isSaveNeeded = false;
 
+    // Used to load the native library on application startup.
+    static {
+        System.loadLibrary("alltv");
+    }
+
+    public native String[] tvingDecrypt(String code, String data);
 
     private String getStringById(int resourceId) {
         return this.getResources().getString(resourceId);
@@ -95,8 +114,10 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         setContentView(R.layout.activity_videoplayer);
 
-        mPlayerView = (PlayerView) findViewById(R.id.video_view);
-        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
+        mContext = this;
+
+        mPlayerView = (PlayerView)findViewById(R.id.video_view);
+        mProgressBar = (ProgressBar)findViewById(R.id.progressBar);
 
         mProgressBar.setVisibility(View.VISIBLE);
 
@@ -111,32 +132,34 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         createPlayer();
 
-        if (BuildConfig.DEBUG) {
-            mPlayerView.setOnTouchListener(new View.OnTouchListener() {
+        mPlayerView.setOnTouchListener(new View.OnTouchListener() {
 
-                @Override
-                public boolean onTouch(View view, MotionEvent motionEvent) {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
 
-                    float left, right, top, bottom;
+                float left, right, top, bottom, mid;
 
-                    left = (float) (mWindowSize.x * 0.1);
-                    right = (float) (mWindowSize.x * 0.9);
-                    top = left;
-                    bottom = (float) (mWindowSize.y - top);
+                left  = (float) (mWindowSize.x * 0.1);
+                right = (float) (mWindowSize.x * 0.9);
+                mid   = (float) (mWindowSize.x * 0.5);
+                top = left;
+                bottom = (float)(mWindowSize.y - top);
 
 //                    Log.e(TAG, "onCreate: " + Float.toString(left) + ", " + Float.toString(right));
 //                    Log.e(TAG, "motionEvent: " + Float.toString(motionEvent.getX()) + ", " + Float.toString(motionEvent.getY()));
 
-                    if (motionEvent.getX() < left) {
-                        if (motionEvent.getY() < top) {
-                            Intent intent = new Intent();
-                            intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels);
-                            if (isSaveNeeded)
-                                setResult(RESULT_OK, intent);
-                            else
-                                setResult(RESULT_CANCELED, intent);
-                            finishAfterTransition();
-                        } else if (mSlidingPanel.isPanelShow() && motionEvent.getY() > bottom) {
+                if(motionEvent.getX() < left) {
+                    if (motionEvent.getY() < top) {
+                        Intent intent = new Intent();
+                        intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_STR), mChannels);
+                        if( isSaveNeeded )
+                            setResult(RESULT_OK, intent);
+                        else
+                            setResult(RESULT_CANCELED, intent);
+                        finishAfterTransition();
+                    } else {
+
+                        if (mSlidingPanel.isPanelShow()) {
                             if (mEPGIndex >= 0) {
                                 if (mEPGIndex > 0) mEPGIndex -= 1;
                                 displayProgramInfo(3000);
@@ -148,12 +171,39 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                                 mProgressBar.setVisibility(View.VISIBLE);
                                 new FetchVideoUrlTask().execute(mCurrentChannel);
                             } else {
-                                Toast.makeText(getBaseContext(), getStringById(R.string.first_channel),
+                                Toast.makeText(mContext, getStringById(R.string.first_channel),
                                         Toast.LENGTH_SHORT).show();
                             }
                         }
-                    } else if (motionEvent.getX() > right) {
-                        if (mSlidingPanel.isPanelShow() && motionEvent.getY() > bottom) {
+                    }
+
+                } else if(motionEvent.getX() > right) {
+
+                    if (motionEvent.getY() < top) {
+
+                        if(!mSlidingPanel.isPanelShow()) {
+                            showProgramInfo(3000);
+                        }
+
+                        if (mCurrentChannel != mChannelIndex) {
+                            return false;
+                        }
+
+                        ChannelData chData = mChannels.get(mCurrentChannel);
+                        isSaveNeeded = true;
+                        if (chData.getFavorite() > 0) {
+                            chData.setFavorite(0);
+                            mSlidingPanel.hideFavorite();
+                            Toast.makeText(mContext, getStringById(R.string.favorite_disable),
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            chData.setFavorite(1);
+                            mSlidingPanel.showFavorite();
+                            Toast.makeText(mContext, getStringById(R.string.favorite_enable),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        if (mSlidingPanel.isPanelShow()) {
 
                             if (mEPGIndex >= 0) {
                                 int size = mChannels.get(mChannelIndex).getEPG().size() - 1;
@@ -162,52 +212,67 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                             }
 
                         } else {
+
                             if (mCurrentChannel < mChannels.size() - 1) {
                                 mCurrentChannel += 1;
                                 mSlidingPanel.hideSlidingPanel();
                                 mProgressBar.setVisibility(View.VISIBLE);
                                 new FetchVideoUrlTask().execute(mCurrentChannel);
                             } else {
-                                Toast.makeText(getBaseContext(), getStringById(R.string.last_channel),
+                                Toast.makeText(mContext, getStringById(R.string.last_channel),
                                         Toast.LENGTH_SHORT).show();
                             }
-                        }
-                    } else {
-                        if (mSlidingPanel.isPanelShow()) {
-                            if (motionEvent.getY() > bottom) {
 
-                                if (mCurrentChannel != mChannelIndex) {
-                                    return false;
-                                }
-
-                                ChannelData chData = mChannels.get(mCurrentChannel);
-                                isSaveNeeded = true;
-                                if (chData.getFavorite() > 0) {
-                                    chData.setFavorite(0);
-                                    mSlidingPanel.hideFavorite();
-                                    Toast.makeText(getBaseContext(), getStringById(R.string.favorite_disable),
-                                            Toast.LENGTH_SHORT).show();
-                                } else {
-                                    chData.setFavorite(1);
-                                    mSlidingPanel.showFavorite();
-                                    Toast.makeText(getBaseContext(), getStringById(R.string.favorite_enable),
-                                            Toast.LENGTH_SHORT).show();
-                                }
-                            } else {
-                                mSlidingPanel.hideSlidingPanel();
-                            }
-                        } else {
-                            showProgramInfo(3000);
                         }
                     }
-                    return false;
+
+                } else if(motionEvent.getX() > (mid-left) && motionEvent.getX() < (mid+left) &&
+                         (motionEvent.getY() < top || motionEvent.getY() > bottom)) {
+
+                    if(mSlidingPanel.isPanelShow()) {
+                        if(motionEvent.getY() < top) {
+
+                            if(mChannelIndex < mChannels.size()-1)
+                                mChannelIndex += 1;
+                            else
+                                mChannelIndex = 0;
+
+                            changeChannelInfo(3000);
+
+                        } else if( motionEvent.getY() > bottom) {
+
+                            if(mChannelIndex > 0)
+                                mChannelIndex -= 1;
+                            else
+                                mChannelIndex = mChannels.size()-1;
+
+                            changeChannelInfo(3000);
+                        }
+                    }
+
+                } else {
+                    if(mSlidingPanel.isPanelShow()) {
+
+                        mSlidingPanel.hideSlidingPanel();
+
+                        if(mCurrentChannel != mChannelIndex) {
+                            mCurrentChannel = mChannelIndex;
+                            mProgressBar.setVisibility(View.VISIBLE);
+                            new FetchVideoUrlTask().execute(mCurrentChannel);
+                        }
+
+                    }
+                    else {
+                        showProgramInfo(3000);
+                    }
                 }
-            });
-        }
+                return false;
+            }
+        });
 
         mSlidingPanel.setInfoText("");
 
-        mChannels = getIntent().getParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG));
+        mChannels = getIntent().getParcelableArrayListExtra(getStringById(R.string.CHANNELS_STR));
         mCurrentChannel = getIntent().getIntExtra(getStringById(R.string.CURRENTCHANNEL_STR), 0);
 
         new FetchVideoUrlTask().execute(mCurrentChannel);
@@ -216,7 +281,8 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
     @Override
     protected void onNewIntent(Intent intent) {
-        ArrayList<ChannelData> channelData = intent.getParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG));
+        ArrayList<ChannelData> channelData = intent.getParcelableArrayListExtra(getStringById(R.string.CHANNELS_STR));
+
         mChannels.clear();
         mChannels = channelData;
     }
@@ -227,12 +293,12 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
 
             if (mSlidingPanel.isPanelShow()) {
-                if (isLongPressed) {
+                if( isLongPressed ) {
                     isLongPressed = false;
                 } else {
                     mSlidingPanel.hideSlidingPanel();
 
-                    if (mCurrentChannel != mChannelIndex) {
+                    if(mCurrentChannel != mChannelIndex) {
                         mCurrentChannel = mChannelIndex;
                         mProgressBar.setVisibility(View.VISIBLE);
                         new FetchVideoUrlTask().execute(mCurrentChannel);
@@ -251,15 +317,15 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
 
-            if (event.isLongPress()) {
+            if( event.isLongPress() ) {
 
                 isLongPressed = true;
 
-                if (!mSlidingPanel.isPanelShow()) {
+                if(!mSlidingPanel.isPanelShow()) {
                     showProgramInfo(3000);
                 }
 
-                if (mCurrentChannel != mChannelIndex) {
+                if(mCurrentChannel != mChannelIndex) {
                     return false;
                 }
 
@@ -269,13 +335,13 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                 if (chData.getFavorite() > 0) {
                     chData.setFavorite(0);
                     mSlidingPanel.hideFavorite();
-                    Toast.makeText(getBaseContext(), getStringById(R.string.favorite_disable),
+                    Toast.makeText(mContext, getStringById(R.string.favorite_disable),
                             Toast.LENGTH_SHORT).show();
 
                 } else {
                     chData.setFavorite(1);
                     mSlidingPanel.showFavorite();
-                    Toast.makeText(getBaseContext(), getStringById(R.string.favorite_enable),
+                    Toast.makeText(mContext, getStringById(R.string.favorite_enable),
                             Toast.LENGTH_SHORT).show();
                 }
 
@@ -283,16 +349,16 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                 mSlidingPanel.closeDelayed(3000);
             }
 
-        } else if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (mSlidingPanel.isPanelShow()) {
+        } else if(keyCode == KeyEvent.KEYCODE_BACK) {
+            if(mSlidingPanel.isPanelShow()) {
                 mSlidingPanel.hideSlidingPanel();
                 return false;
             } else {
 
                 Intent intent = new Intent();
-                intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels);
+                intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_STR), mChannels);
 
-                if (isSaveNeeded)
+                if( isSaveNeeded )
                     setResult(RESULT_OK, intent);
                 else
                     setResult(RESULT_CANCELED, intent);
@@ -300,75 +366,66 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                 finishAfterTransition();
             }
 
-        } else if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+        } else if(keyCode == KeyEvent.KEYCODE_DPAD_UP ||
+                  keyCode == KeyEvent.KEYCODE_CHANNEL_UP) {
 
-            if (mSlidingPanel.isPanelShow()) {
-                if (mChannelIndex < mChannels.size() - 1)
+            if(mSlidingPanel.isPanelShow()) {
+                if(mChannelIndex < mChannels.size()-1)
                     mChannelIndex += 1;
                 else
                     mChannelIndex = 0;
 
-                ChannelData chData = mChannels.get(mChannelIndex);
-                ArrayList<EPGData> epgData = chData.getEPG();
+                changeChannelInfo(3000);
 
-                if (epgData.size() == 0) mEPGIndex = -1;
-                else if (mEPGIndex < 0) mEPGIndex = 0;
-                else if (mEPGIndex > epgData.size() - 1) mEPGIndex = epgData.size() - 1;
-
-                displayProgramInfo(3000);
             } else {
-                if (mCurrentChannel < mChannels.size() - 1) {
+                if(mCurrentChannel < mChannels.size()-1) {
                     mCurrentChannel += 1;
                     mSlidingPanel.hideSlidingPanel();
                     mProgressBar.setVisibility(View.VISIBLE);
                     new FetchVideoUrlTask().execute(mCurrentChannel);
                 } else {
-                    Toast.makeText(getBaseContext(), getStringById(R.string.last_channel),
+                    Toast.makeText(mContext, getStringById(R.string.last_channel),
                             Toast.LENGTH_SHORT).show();
                 }
             }
 
-        } else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
-            if (mSlidingPanel.isPanelShow()) {
-                if (mChannelIndex > 0)
+        } else if(keyCode == KeyEvent.KEYCODE_DPAD_DOWN ||
+                  keyCode == KeyEvent.KEYCODE_CHANNEL_DOWN) {
+
+            if(mSlidingPanel.isPanelShow()) {
+                if(mChannelIndex > 0)
                     mChannelIndex -= 1;
                 else
-                    mChannelIndex = mChannels.size() - 1;
+                    mChannelIndex = mChannels.size()-1;
 
-                ChannelData chData = mChannels.get(mChannelIndex);
-                ArrayList<EPGData> epgData = chData.getEPG();
+                changeChannelInfo(3000);
 
-                if (epgData.size() == 0) mEPGIndex = -1;
-                else if (mEPGIndex < 0) mEPGIndex = 0;
-                else if (mEPGIndex > epgData.size() - 1) mEPGIndex = epgData.size() - 1;
-
-                displayProgramInfo(3000);
             } else {
-                if (mCurrentChannel > 0) {
+                if(mCurrentChannel > 0) {
                     mCurrentChannel -= 1;
                     mSlidingPanel.hideSlidingPanel();
                     mProgressBar.setVisibility(View.VISIBLE);
                     new FetchVideoUrlTask().execute(mCurrentChannel);
                 } else {
-                    Toast.makeText(getBaseContext(), getStringById(R.string.first_channel),
+                    Toast.makeText(mContext, getStringById(R.string.first_channel),
                             Toast.LENGTH_SHORT).show();
                 }
             }
 
-        } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+        } else if(keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
 
-            if (mSlidingPanel.isPanelShow()) {
-                if (mEPGIndex >= 0) {
+            if(mSlidingPanel.isPanelShow()) {
+                if(mEPGIndex >= 0) {
                     if (mEPGIndex > 0) mEPGIndex -= 1;
                 }
                 displayProgramInfo(3000);
             }
 
-        } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+        } else if(keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
 
-            if (mSlidingPanel.isPanelShow()) {
-                if (mEPGIndex >= 0) {
-                    int size = mChannels.get(mChannelIndex).getEPG().size() - 1;
+            if(mSlidingPanel.isPanelShow()) {
+                if(mEPGIndex >= 0) {
+                    int size = mChannels.get(mChannelIndex).getEPG().size()-1;
                     if (mEPGIndex < size) mEPGIndex += 1;
                 }
                 displayProgramInfo(3000);
@@ -389,8 +446,6 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
     private void showProgramInfo(int msec) {
 
-        if (mSlidingPanel.isPanelShow()) return;
-
         mChannelIndex = mCurrentChannel;
 
         ChannelData chData = mChannels.get(mChannelIndex);
@@ -398,9 +453,9 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         mEPGIndex = -1;
 
-        for (int i = 0; i < epgData.size(); i++) {
+        for(int i=0; i<epgData.size(); i++) {
             Date now = new Date();
-            if (now.compareTo(epgData.get(i).getEndTime()) < 0) {
+            if(now.compareTo(epgData.get(i).getEndTime()) < 0) {
                 mEPGIndex = i;
                 break;
             }
@@ -408,7 +463,27 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         displayProgramInfo(0);
 
-        mSlidingPanel.showSlidingPanel(msec);
+        if(!mSlidingPanel.isPanelShow())
+            mSlidingPanel.showSlidingPanel(msec);
+
+    }
+
+    private void changeChannelInfo(int msec) {
+
+        ChannelData chData = mChannels.get(mChannelIndex);
+        ArrayList<EPGData> epgData = chData.getEPG();
+
+        mEPGIndex = -1;
+
+        for(int i=0; i<epgData.size(); i++) {
+            Date now = new Date();
+            if(now.compareTo(epgData.get(i).getEndTime()) < 0) {
+                mEPGIndex = i;
+                break;
+            }
+        }
+
+        displayProgramInfo(msec);
     }
 
     private void displayProgramInfo(int msec) {
@@ -418,7 +493,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         String title = chData.getTitle();
 
-        if (mEPGIndex >= 0) {
+        if(mEPGIndex >= 0) {
             String name = epgData.get(mEPGIndex).getProgramName();
             Date stime = epgData.get(mEPGIndex).getStartTime();
             Date etime = epgData.get(mEPGIndex).getEndTime();
@@ -434,13 +509,13 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
         String currentTime = new SimpleDateFormat("HH:mm").format(new Date());
         mSlidingPanel.setTimeText(currentTime);
 
-        if (chData.getFavorite() > 0) {
+        if(chData.getFavorite() > 0) {
             mSlidingPanel.showFavorite();
         } else {
             mSlidingPanel.hideFavorite();
         }
 
-        if (msec > 0)
+        if(msec > 0)
             mSlidingPanel.closeDelayed(msec);
 
     }
@@ -469,19 +544,51 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         ChannelData chData = mChannels.get(mCurrentChannel);
 
-        if (chData.isAudioChannel()) {
+        if ( chData.isAudioChannel() ) {
             Picasso.get().load(chData.getStillImageUrl()).into(this);
         }
+
+        if(videoUrl == null) return;
 
         Uri uriLive = Uri.parse(videoUrl);
 
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this,
                 getStringById(R.string.USERAGENT));
-        HlsMediaSource mediaSourcelive = new HlsMediaSource.Factory(dataSourceFactory)
+        HlsMediaSource mediaSourceLive = new HlsMediaSource.Factory(dataSourceFactory)
                 .setAllowChunklessPreparation(true)
                 .createMediaSource(uriLive);
 
-        mPlayer.prepare(mediaSourcelive);
+        mPlayer.prepare(mediaSourceLive);
+
+    }
+
+    private void openPlayer(String videoUrl, String videoCookie) {
+
+        ChannelData chData = mChannels.get(mCurrentChannel);
+
+        if ( chData.isAudioChannel() ) {
+            Picasso.get().load(chData.getStillImageUrl()).into(this);
+        }
+
+        if(videoUrl == null) return;
+
+        Uri uriLive = Uri.parse(videoUrl);
+
+        DefaultHttpDataSourceFactory httpSourceFactory = new DefaultHttpDataSourceFactory(
+                getStringById(R.string.USERAGENT), null);
+
+        if( videoCookie != null && !videoCookie.equals("") ) {
+            httpSourceFactory.getDefaultRequestProperties().set("Cookie", videoCookie);
+        }
+
+        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this,
+                null, httpSourceFactory);
+
+        HlsMediaSource mediaSourceLive = new HlsMediaSource.Factory(dataSourceFactory)
+                .setAllowChunklessPreparation(true)
+                .createMediaSource(uriLive);
+
+        mPlayer.prepare(mediaSourceLive);
 
     }
 
@@ -528,7 +635,7 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
     @Override
     public void onLoadingChanged(boolean isLoading) {
 
-        if (isLoading)
+        if( isLoading )
             showProgramInfo(1000);
 
     }
@@ -576,19 +683,25 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
     private class FetchVideoUrlTask extends AsyncTask<Integer, Integer, Integer> {
 
-        private String videoUrl = null;
+        private String videoUrl = "";
+        private String videoCookie = "";
 
         protected Integer doInBackground(Integer... channelIndex) {
 
             ArrayList<ChannelData> chList = mChannels;
             int arrIndex = channelIndex[0];
 
+            if(arrIndex < 0)
+                return Utils.Code.NoVideoUrl_err.ordinal();
+
             ChannelData chData = chList.get(arrIndex);
 
-            if (chData.getSiteType() == Utils.SiteType.Oksusu.ordinal()) {
+            if(chData.getSiteType() == Utils.SiteType.Oksusu.ordinal()) {
                 return OksusuFetchVideoUrl(chData);
-            } else if (chData.getSiteType() == Utils.SiteType.Pooq.ordinal()) {
+            } else if(chData.getSiteType() == Utils.SiteType.Pooq.ordinal()) {
                 return PooqFetchVideoUrl(chData);
+            } else if(chData.getSiteType() == Utils.SiteType.Tving.ordinal()) {
+                return TvingFetchVideoUrl(chData);
             }
 
             return Utils.Code.NoVideoUrl_err.ordinal();
@@ -604,67 +717,22 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
             switch (Utils.Code.values()[result]) {
                 case NoAuthKey_err:
-                    Utils.showToast(getBaseContext(), R.string.login_error_video);
+                    Utils.showToast(mContext, R.string.login_error_video);
                     setResult(RESULT_CANCELED);
                     finishAfterTransition();
                     break;
                 case NoVideoUrl_err:
-                    Utils.showToast(getBaseContext(), R.string.geturl_error);
+                    Utils.showToast(mContext, R.string.geturl_error);
                     setResult(RESULT_CANCELED);
                     finishAfterTransition();
                     break;
                 case FetchVideoUrlTask_OK:
-                    openPlayer(videoUrl);
+                    if(videoCookie == null || videoCookie.equals(""))
+                        openPlayer(videoUrl);
+                    else
+                        openPlayer(videoUrl, videoCookie);
                     break;
             }
-        }
-
-        private int OksusuFetchVideoUrl(ChannelData chData) {
-
-            String authKey = chData.getAuthkey();
-
-            if (authKey == null || authKey.length() < 10)
-                return Utils.Code.NoAuthKey_err.ordinal();
-
-            try {
-
-                String url = getStringById(R.string.OKSUSUVIDEO_URL) + String.valueOf(chData.getId());
-
-                HttpRequest request = HttpRequest.get(url)
-                        .userAgent("Mozilla/4.0")
-                        .header(getStringById(R.string.COOKIE_STR), authKey);
-
-                if (request == null || request.badRequest() || request.isBodyEmpty()) {
-                    return Utils.Code.NoVideoUrl_err.ordinal();
-                }
-
-                String resultBody = request.body();
-
-                if (resultBody.contains(getStringById(R.string.CONTENTINFO_STR))) {
-
-                    String jsonStr = resultBody.substring(resultBody.indexOf(getStringById(R.string.CONTENTINFO_STR)) + 14,
-                            resultBody.indexOf(getStringById(R.string.OKSUSUJSONSUB_STR)));
-
-                    JsonParser jsonParser = new JsonParser();
-                    JsonElement jsonElement = jsonParser.parse(jsonStr);
-
-                    videoUrl = Utils.removeQuote(jsonElement.getAsJsonObject().get(getStringById(R.string.STREAMURL_STR))
-                            .getAsJsonObject().get(getQualityTag(chData)).toString());
-
-                    if (videoUrl.equals("null") || videoUrl.length() == 0) {
-                        return Utils.Code.NoVideoUrl_err.ordinal();
-                    }
-
-                } else {
-                    return Utils.Code.NoVideoUrl_err.ordinal();
-                }
-
-            } catch (Exception ex) {
-                return Utils.Code.NoVideoUrl_err.ordinal();
-            } finally {
-                return Utils.Code.FetchVideoUrlTask_OK.ordinal();
-            }
-
         }
 
         private int PooqFetchVideoUrl(ChannelData chData) {
@@ -704,6 +772,8 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                     return Utils.Code.NoVideoUrl_err.ordinal();
                 }
 
+//                Log.e(TAG, videoUrl);
+
             } catch (Exception ex) {
                 return Utils.Code.NoVideoUrl_err.ordinal();
             } finally {
@@ -711,12 +781,150 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
             }
         }
 
+        private int TvingFetchVideoUrl(ChannelData chData) {
+
+            String authKey = chData.getAuthkey();
+
+            if (authKey == null || authKey.length() < 10)
+                return Utils.Code.NoAuthKey_err.ordinal();
+
+            try {
+
+                Long ts = System.currentTimeMillis() / 1000;
+                String timestamp = ts.toString();
+
+                String channelId = chData.getId();
+                String quality = getQualityTag(chData);
+
+                HttpRequest request = HttpRequest.get("http://api.tving.com/v1/media/stream/info", true,
+                        "apiKey", "1e7952d0917d6aab1f0293a063697610",
+                        "info", "Y",
+                        "networkCode", "CSND0900",
+                        "osCode", "CSOD0900",
+                        "teleCode", "CSCD0900",
+                        "mediaCode", channelId,
+                        "screenCode", "CSSD0100",
+                        "streamCode", quality,
+                        "noCache", timestamp,
+                        "callingFrom", "FLASH",
+                        "adReq", "none",
+                        "ooc", "")
+                        .userAgent(getStringById(R.string.USERAGENT))
+                        .header("Cookie", authKey);
+
+                if (request == null || request.badRequest() || request.isBodyEmpty()) {
+                    return Utils.Code.NoVideoUrl_err.ordinal();
+                }
+
+                String resultJson = request.body();
+
+                JsonParser parser = new JsonParser();
+                JsonObject object = parser.parse(resultJson).getAsJsonObject().getAsJsonObject("body");
+
+                String broad_url = object.getAsJsonObject("stream").getAsJsonObject("broadcast").get("broad_url").getAsString();
+
+                String[] decrypt = tvingDecrypt(channelId, broad_url);
+
+                videoUrl = decrypt[0];
+                videoCookie = decrypt[1];
+
+                if (videoUrl == null || videoUrl.equals("null") || videoUrl.length() == 0) {
+                    return Utils.Code.NoVideoUrl_err.ordinal();
+                }
+
+            } catch (Exception ex) {
+                return Utils.Code.NoVideoUrl_err.ordinal();
+            } finally {
+                return Utils.Code.FetchVideoUrlTask_OK.ordinal();
+            }
+        }
+
+        private int OksusuFetchVideoUrl(ChannelData chData) {
+
+            String authKey = chData.getAuthkey();
+
+            if (authKey == null || authKey.length() < 10)
+                return Utils.Code.NoAuthKey_err.ordinal();
+
+            try {
+
+                String url = getStringById(R.string.OKSUSUVIDEO_URL) + String.valueOf(chData.getId());
+
+                HttpRequest request = HttpRequest.get(url)
+                        .userAgent("Mozilla/4.0")
+                        .header(getStringById(R.string.COOKIE_STR), authKey);
+
+                if(request == null || request.badRequest() || request.isBodyEmpty()) {
+                    return Utils.Code.NoVideoUrl_err.ordinal();
+                }
+
+                String resultBody = request.body();
+
+                if (resultBody.contains(getStringById(R.string.CONTENTINFO_STR))) {
+
+                    String jsonStr = resultBody.substring(resultBody.indexOf(getStringById(R.string.CONTENTINFO_STR)) + 14,
+                            resultBody.indexOf(getStringById(R.string.OKSUSUJSONSUB_STR)));
+
+                    JsonParser jsonParser = new JsonParser();
+                    JsonElement jsonElement = jsonParser.parse(jsonStr);
+
+                    videoUrl = Utils.removeQuote(jsonElement.getAsJsonObject().get(getStringById(R.string.STREAMURL_STR))
+                            .getAsJsonObject().get(getQualityTag(chData)).toString());
+
+                    if (videoUrl.equals("null") || videoUrl.length() == 0) {
+                        return Utils.Code.NoVideoUrl_err.ordinal();
+                    }
+
+//                    Log.e(TAG, videoUrl);
+
+                } else {
+                    return Utils.Code.NoVideoUrl_err.ordinal();
+                }
+
+            } catch (Exception ex) {
+                return Utils.Code.NoVideoUrl_err.ordinal();
+            } finally {
+                return Utils.Code.FetchVideoUrlTask_OK.ordinal();
+            }
+
+        }
+
         private String getQualityTag(ChannelData chData) {
 
             int siteType = chData.getSiteType();
             int qualityType = chData.getQualityType();
 
-            if (siteType == Utils.SiteType.Oksusu.ordinal()) {
+            if(siteType == Utils.SiteType.Pooq.ordinal()) {
+
+                switch (SettingsData.PooqQualityType.values()[qualityType]) {
+                    case Mobile:
+                        return getStringById(R.string.POOQ_MOBILE_QUALITY_TAG);
+                    case SD:
+                        return getStringById(R.string.POOQ_SD_QUALITY_TAG);
+                    case HD:
+                        return getStringById(R.string.POOQ_HD_QUALITY_TAG);
+                    case FHD:
+                        return getStringById(R.string.POOQ_FHD_QUALITY_TAG);
+                }
+
+                return getStringById(R.string.POOQ_SD_QUALITY_TAG);
+
+            } else if(siteType == Utils.SiteType.Tving.ordinal()) {
+
+                switch (SettingsData.TvingQualityType.values()[qualityType]) {
+                    case MD:
+                        return getStringById(R.string.TVING_MD_QUALITY_TAG);
+                    case SD:
+                        return getStringById(R.string.TVING_SD_QUALITY_TAG);
+                    case HD:
+                        return getStringById(R.string.TVING_HD_QUALITY_TAG);
+                    case FHD:
+                        return getStringById(R.string.TVING_FHD_QUALITY_TAG);
+                }
+
+                return getStringById(R.string.TVING_HD_QUALITY_TAG);
+
+            } else if(siteType == Utils.SiteType.Oksusu.ordinal()) {
 
                 switch (SettingsData.OksusuQualityType.values()[qualityType]) {
                     case AUTO:
@@ -731,21 +939,9 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
                 return getStringById(R.string.URLAUTO_STR);
 
-            } else {
-
-                switch (SettingsData.PooqQualityType.values()[qualityType]) {
-                    case Mobile:
-                        return getStringById(R.string.POOQ_MOBILE_QUALITY_TAG);
-                    case SD:
-                        return getStringById(R.string.POOQ_SD_QUALITY_TAG);
-                    case HD:
-                        return getStringById(R.string.POOQ_HD_QUALITY_TAG);
-                    case FHD:
-                        return getStringById(R.string.POOQ_FHD_QUALITY_TAG);
-                }
-
-                return getStringById(R.string.POOQ_SD_QUALITY_TAG);
             }
+
+            return "";
         }
 
     }

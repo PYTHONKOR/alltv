@@ -55,50 +55,63 @@ public class FetchChannelService extends IntentService {
                     .getParcelableExtra(getStringById(R.string.FETCHCHANNELRESULTRECEIVER_STR));
 
             Gson gson = new Gson();
-            SettingsData receivedData = gson.fromJson(intent
+            SettingsData settingsData = gson.fromJson(intent
                     .getStringExtra(getStringById(R.string.SETTINGSDATA_STR)), SettingsData.class);
 
             Utils.SiteType siteType = (Utils.SiteType) intent.getSerializableExtra(getStringById(R.string.SITETYPE_STR));
 
-            if (siteType == Utils.SiteType.Oksusu) {
-                mSiteProcessor = new OksusuSiteProcessor(getApplicationContext());
-            } else if (siteType == Utils.SiteType.Pooq) {
+            if (siteType == Utils.SiteType.Pooq) {
                 mSiteProcessor = new PooqSiteProcessor(getApplicationContext());
+            } else if (siteType == Utils.SiteType.Tving) {
+                mSiteProcessor = new TvingSiteProcessor(getApplicationContext());
+            } else if (siteType == Utils.SiteType.Oksusu) {
+                mSiteProcessor = new OksusuSiteProcessor(getApplicationContext());
             }
 
             String authkey = (String) intent.getSerializableExtra(getStringById(R.string.AUTHKEY_STR));
 
-            if (authkey == null || authkey.length() == 0)
+            if (authkey == null || authkey.length() == 0) {
                 mSiteProcessor.setAuthKey("");
-            else
+            } else {
                 mSiteProcessor.setAuthKey(authkey);
+            }
+
+            String mode = (String) intent.getSerializableExtra(getStringById(R.string.FETCHMODE_STR));
 
             ArrayList<ChannelData> channels = new ArrayList<>();
             ArrayList<CategoryData> category = new ArrayList<>();
+            boolean error = false;
 
-            if (mSiteProcessor.doProcess(receivedData)) {
-                channels.addAll(mSiteProcessor.getChannelList());
-                category.addAll(mSiteProcessor.getCategorylList());
+            if(mode.equals("create")) {
+                if (mSiteProcessor.doProcess(settingsData)) {
+                    channels = mSiteProcessor.getChannelList();
+                    category = mSiteProcessor.getCategorylList();
+                } else {
+                    error = true;
+                }
+            } else if(mode.equals("refresh")) {
+                channels = intent.getParcelableArrayListExtra(getStringById(R.string.CHANNELS_STR));
+                category = intent.getParcelableArrayListExtra(getStringById(R.string.CATEGORY_STR));
+
+                mSiteProcessor.setChannelList(channels);
+                mSiteProcessor.setCategorylList(category);
+
+                if(!mSiteProcessor.updateProcess()) {
+                    error = true;
+                }
             }
-
-            int channelStrId = mSiteProcessor.getChannelStrId();
-            int CategoryStrId = mSiteProcessor.getCategoryStrId();
-            int AuthKeyStrId = mSiteProcessor.getAuthKeyStrId();
 
             Bundle retBundle = new Bundle();
-            retBundle.putParcelableArrayList(getStringById(channelStrId), channels);
-            retBundle.putParcelableArrayList(getStringById(CategoryStrId), category);
-            retBundle.putString(getStringById(AuthKeyStrId), mSiteProcessor.getAuthKey());
+            retBundle.putParcelableArrayList(getStringById(R.string.CHANNELS_STR), channels);
+            retBundle.putParcelableArrayList(getStringById(R.string.CATEGORY_STR), category);
+            retBundle.putString(getStringById(R.string.AUTHKEY_STR), mSiteProcessor.getAuthKey());
             retBundle.putSerializable(getStringById(R.string.SITETYPE_STR), siteType);
+            retBundle.putString(getStringById(R.string.FETCHMODE_STR), mode);
 
             int retCode;
-            String authKey = mSiteProcessor.getAuthKey();
 
-            if(authKey == null || authKey.length() == 0) {
-                retCode = Utils.Code.ServiceIntent_Fail.ordinal();
-            } else {
-                retCode = Utils.Code.ServiceIntent_OK.ordinal();
-            }
+            if(error) retCode = Utils.Code.ServiceIntent_Fail.ordinal();
+            else      retCode = Utils.Code.ServiceIntent_OK.ordinal();
 
             channelResultReceiver.send(retCode, retBundle);
         }
