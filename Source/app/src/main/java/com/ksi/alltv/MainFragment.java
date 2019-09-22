@@ -353,15 +353,15 @@ public class MainFragment extends BrowseSupportFragment implements FetchChannelR
         setOnSearchClickedListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                if(BuildConfig.DEBUG) {
+                if(BuildConfig.DEBUG) {
                     new Thread(new Runnable() {
                         public void run() {
                             new Instrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
                         }
                     }).start();
-//                } else {
-//                    Utils.showToast(getContext(), R.string.notready);
-//                }
+                } else {
+                    Utils.showToast(getContext(), R.string.notready);
+                }
             }
         });
 

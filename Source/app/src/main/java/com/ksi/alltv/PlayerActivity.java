@@ -35,7 +35,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 
-import android.util.Base64;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -62,17 +61,9 @@ import com.google.gson.JsonParser;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
-import java.security.Key;
-import java.security.spec.AlgorithmParameterSpec;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-
-import javax.crypto.Cipher;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.DESedeKeySpec;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 
 
 public class PlayerActivity extends FragmentActivity implements Player.EventListener, Target {
@@ -125,8 +116,6 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
 
         mWindowSize = Utils.getDisplaySize(this);
 
-//        Log.e(TAG, "onCreate: " + Integer.toString(mWindowSize.x) + ", " + Integer.toString(mWindowSize.y));
-
         isLongPressed = false;
         isSaveNeeded = false;
 
@@ -144,9 +133,6 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                 mid   = (float) (mWindowSize.x * 0.5);
                 top = left;
                 bottom = (float)(mWindowSize.y - top);
-
-//                    Log.e(TAG, "onCreate: " + Float.toString(left) + ", " + Float.toString(right));
-//                    Log.e(TAG, "motionEvent: " + Float.toString(motionEvent.getX()) + ", " + Float.toString(motionEvent.getY()));
 
                 if(motionEvent.getX() < left) {
                     if (motionEvent.getY() < top) {
@@ -772,8 +758,6 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                     return Utils.Code.NoVideoUrl_err.ordinal();
                 }
 
-//                Log.e(TAG, videoUrl);
-
             } catch (Exception ex) {
                 return Utils.Code.NoVideoUrl_err.ordinal();
             } finally {
@@ -874,8 +858,6 @@ public class PlayerActivity extends FragmentActivity implements Player.EventList
                     if (videoUrl.equals("null") || videoUrl.length() == 0) {
                         return Utils.Code.NoVideoUrl_err.ordinal();
                     }
-
-//                    Log.e(TAG, videoUrl);
 
                 } else {
                     return Utils.Code.NoVideoUrl_err.ordinal();
