@@ -28,6 +28,7 @@ import android.content.Intent;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
+import android.support.v17.leanback.widget.ListRowPresenter;
 import android.support.v17.leanback.widget.OnItemViewClickedListener;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.Row;
@@ -48,7 +49,6 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
 
     public PooqRowSupportFragment() {
         setOnItemViewClickedListener(this);
-
         mType = Utils.SiteType.Pooq;
     }
 
@@ -64,27 +64,27 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
         AllTvBaseRowsSupportFragment.setAuthKey(Utils.SiteType.Pooq, authKey);
     }
 
-    public static void setQualityType(SettingsData.PooqQualityType inType) {
-        if (mQualityType != inType)
-            clearAllVideoUrl();
+    public static void setEnable(Boolean enable) {
+        AllTvBaseRowsSupportFragment.setEnable(Utils.SiteType.Pooq, enable);
+    }
 
+    public static void setQualityType(SettingsData.PooqQualityType inType) {
         mQualityType = inType;
     }
 
-    public static void clearAllVideoUrl() {
-        AllTvBaseRowsSupportFragment.clearAllVideoUrl(Utils.SiteType.Pooq);
+    public static boolean updateFavoriteList(ArrayList<String> favorites) {
+        return AllTvBaseRowsSupportFragment.updateFavoriteList(Utils.SiteType.Pooq, favorites);
     }
 
-    public static void updateFavoriteList(ArrayList<String> favorites) {
-        AllTvBaseRowsSupportFragment.updateFavoriteList(Utils.SiteType.Pooq, favorites);
+    public static void updateEPG(ArrayList<ChannelData> chList) {
+        AllTvBaseRowsSupportFragment.updateEPG(Utils.SiteType.Pooq, chList);
     }
 
     @Override
     public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item,
                               RowPresenter.ViewHolder rowViewHolder, Row row) {
         if (item instanceof ChannelData) {
-            String authKey = ((ChannelData) item).getAuthkey();
-
+            String authKey = ((ChannelData) item).getAuthkey();;
             if (authKey == null || authKey.length() < 10) {
                 Utils.showToast(getContext(), getStringById(R.string.nologin_error));
                 return;
@@ -99,7 +99,7 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
         int requestCode = Utils.Code.PooqPlay.ordinal();
         Intent intent = new Intent(getActivity(), PlayerActivity.class);
         intent.addFlags(FLAG_ACTIVITY_SINGLE_TOP);
-        intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels.get(mType));
+        intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_STR), mChannels.get(mType));
         intent.putExtra(getStringById(R.string.CURRENTCHANNEL_STR), currentChannel);
 
         getActivity().startActivityForResult(intent, requestCode);
@@ -129,32 +129,36 @@ public class PooqRowSupportFragment extends AllTvBaseRowsSupportFragment impleme
         for (CategoryData ctData : ctList) {
 
             ArrayObjectAdapter adapter = new ArrayObjectAdapter(presenterSelector);
+            int index = 0;
 
             for (int i = (chList.size() - 1); i >= 0; i--) {
                 if (ctData.getId() == chList.get(i).getCategoryId()) {
+                    chList.get(i).setItemIndex(index++);
                     adapter.add(chList.get(i));
-                    chList.remove(i);
                 }
             }
 
-            HeaderItem headerItem = new HeaderItem(ctData.getTitle());
-
-            mRowsAdapter.add(new ListRow(headerItem, adapter));
+            if(adapter.size() > 0) {
+                HeaderItem headerItem = new HeaderItem(ctData.getTitle());
+                mRowsAdapter.add(new ListRow(headerItem, adapter));
+            }
         }
 
-        getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
+        if(getMainFragmentAdapter() != null)
+            getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
     }
 
     @Override
     public void refreshRows() {
         mRowsAdapter.notifyArrayItemRangeChanged(0, mRowsAdapter.size());
+        setSelectedPosition(mRowIndex, true, new ListRowPresenter.SelectItemViewHolderTask(mItemIndex));
     }
 
     @Override
     public void sendChannelData() {
         Intent intent = new Intent(getActivity(), PlayerActivity.class);
         intent.addFlags(FLAG_ACTIVITY_SINGLE_TOP);
-        intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_TAG), mChannels.get(mType));
+        intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_STR), mChannels.get(mType));
 
         getActivity().startActivity(intent);
     }

@@ -7,8 +7,9 @@ android {
         minSdkVersion 23
         targetSdkVersion 26
         versionCode 9
-        versionName "1.9"
+        versionName "2.0"
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -20,6 +21,14 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    sourceSets {
+        main{
+            // let gradle pack the shared library into apk
+            jniLibs.srcDirs = ['lib']
+        }
+    }
+
 }
 
 dependencies {

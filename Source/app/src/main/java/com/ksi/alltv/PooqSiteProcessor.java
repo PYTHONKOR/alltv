@@ -32,7 +32,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -46,40 +45,28 @@ public class PooqSiteProcessor extends SiteProcessor {
 
     public PooqSiteProcessor(Context context) {
         super(context);
-
         mChannelDatas.clear();
-    }
-
-    @Override
-    public int getChannelStrId() {
-        return R.string.POOQ_CHANNELS_STR;
-    }
-
-    @Override
-    public int getCategoryStrId() {
-        return R.string.POOQ_CATEGORY_STR;
-    }
-
-    @Override
-    public int getAuthKeyStrId() {
-        return R.string.POOQAUTHKEY_STR;
     }
 
     @Override
     public boolean doProcess(SettingsData inSettingsData) {
 
         if (mAuthKey == null || mAuthKey.length() == 0)
-            doLogin(inSettingsData);
+            if(!doLogin(inSettingsData))
+                return false;
 
-        getLiveTvList(inSettingsData);
-
-        return true;
+        return getLiveTvList(inSettingsData);
     }
 
-    private void getLiveTvList(SettingsData inSettingsData) {
+    @Override
+    public boolean updateProcess() {
+        return getEPGList();
+    }
+
+    private boolean getLiveTvList(SettingsData inSettingsData) {
 
         if (mAuthKey == null || mAuthKey.length() == 0)
-            return;
+            return false;
 
         mQualityType = inSettingsData.mPooqSettings.mQualityType.ordinal();
 
@@ -92,8 +79,8 @@ public class PooqSiteProcessor extends SiteProcessor {
                     getStringById(R.string.POOQ_CREDENTIAL_STR), mAuthKey)
                     .userAgent(getStringById(R.string.USERAGENT));
 
-            if (request == null || request.badRequest() || request.isBodyEmpty())
-                return;
+            if(request == null || request.badRequest() || request.isBodyEmpty())
+                return false;
 
             String resultJson = request.body();
 
@@ -144,13 +131,16 @@ public class PooqSiteProcessor extends SiteProcessor {
         } catch (Exception ex) {
             mChannelDatas.clear();
             mCategoryDatas.clear();
+            return false;
         } finally {
-            getEPGList();
+            if(!getEPGList())
+                return false;
         }
 
+        return true;
     }
 
-    private void getEPGList() {
+    public boolean getEPGList() {
 
         Long ts = System.currentTimeMillis();
         String timestamp = ts.toString();
@@ -159,7 +149,7 @@ public class PooqSiteProcessor extends SiteProcessor {
         String startTime = sdf.format(new Date());
 
         Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.HOUR_OF_DAY, 3);
+        calendar.add(Calendar.HOUR_OF_DAY, 6);
         String endTime = sdf.format(calendar.getTime());
 
         // https://apis.pooq.co.kr/live/epgs?apikey=E5F3E0D30947AA5440556471321BB6D9
@@ -193,8 +183,8 @@ public class PooqSiteProcessor extends SiteProcessor {
                     "limit", "100")
                     .userAgent(getStringById(R.string.USERAGENT));
 
-            if (request == null || request.badRequest() || request.isBodyEmpty())
-                return;
+            if(request == null || request.badRequest() || request.isBodyEmpty())
+                return false;
 
             String resultJson = request.body();
 
@@ -209,15 +199,15 @@ public class PooqSiteProcessor extends SiteProcessor {
 
                 ChannelData channelData = null;
 
-                for (int i = 0; i < mChannelDatas.size(); i++) {
-                    if (mChannelDatas.get(i).getId().equals(serviceId)) {
+                for(int i=0; i<mChannelDatas.size(); i++) {
+                    if(mChannelDatas.get(i).getId().equals(serviceId)) {
                         channelData = mChannelDatas.get(i);
                         break;
                     }
                 }
 
-                if (channelData == null) {
-                    //                Log.e(TAG, serviceId + ", " + channelName + " is not exist.");
+                if(channelData == null) {
+    //                Log.e(TAG, serviceId + ", " + channelName + " is not exist.");
                     continue;
                 }
 
@@ -248,47 +238,48 @@ public class PooqSiteProcessor extends SiteProcessor {
             }
 
         } catch (Exception ex) {
-
+            return false;
         }
 
+        return true;
     }
 
-    private void doLogin(SettingsData inSettingsData) {
+    private boolean doLogin(SettingsData inSettingsData) {
 
         mAuthKey = "";
         mQualityType = inSettingsData.mPooqSettings.mQualityType.ordinal();
 
         if (inSettingsData.mPooqSettings.mId == null || inSettingsData.mPooqSettings.mPassword == null)
-            return;
+            return false;
 
         try {
 
             String requestUrl = getStringById(R.string.POOQ_LOGIN_URL) + "?" +
                     getStringById(R.string.MODE_STR) + "=" + getStringById(R.string.ID_STR) + "&" +
                     getStringById(R.string.ID_STR) + "=" + inSettingsData.mPooqSettings.mId + "&" +
-                    getStringById(R.string.PASSWORD_STR) + "=" + URLEncoder.encode(inSettingsData.mPooqSettings.mPassword, getStringById(R.string.UTF8_STR)) + "&" +
+                    getStringById(R.string.PASSWORD_STR) + "=" + inSettingsData.mPooqSettings.mPassword + "&" +
                     getStringById(R.string.POOQ_CREDENTIAL_STR) + "=" + getStringById(R.string.POOQ_CREDENTIAL_STR) + "&" +
                     getStringById(R.string.DEVICETYPEID_STR) + "=" + getStringById(R.string.PC_STR) + "&" +
                     getStringById(R.string.MARKETTYPEID_STR) + "=" + getStringById(R.string.GENERIC_STR) + "&" +
                     getStringById(R.string.CREDENTIAL_STR) + "=" + getStringById(R.string.POOQ_API_ACCESSKEY_STR);
 
-            HttpRequest postRequest = HttpRequest.post(requestUrl, false)
+            HttpRequest postRequest = HttpRequest.post(requestUrl, true)
                     .userAgent(getStringById(R.string.USERAGENT));
 
-            if (postRequest == null || postRequest.badRequest() || postRequest.isBodyEmpty())
-                return;
+            if(postRequest == null || postRequest.badRequest() || postRequest.isBodyEmpty())
+                return false;
 
             String resultJson = postRequest.body();
 
-            if (resultJson == null || resultJson.equals(getStringById(R.string.NULL_STR)) || resultJson.length() == 0)
-                return;
+            if(resultJson == null || resultJson.equals(getStringById(R.string.NULL_STR)) || resultJson.length() == 0)
+                return false;
 
             JsonParser parser = new JsonParser();
 
             JsonElement returnCode = parser.parse(resultJson).getAsJsonObject().get(getStringById(R.string.RETURNCODE_TAG));
 
             if (returnCode == null || returnCode.getAsInt() != getIntById(R.integer.POOQ_SUCCESS_CODE)) {
-                return;
+                return false;
             }
 
             mAuthKey = Utils.removeQuote(parser.parse(resultJson).getAsJsonObject().
@@ -297,6 +288,9 @@ public class PooqSiteProcessor extends SiteProcessor {
 
         } catch (Exception ex) {
             mAuthKey = "";
+            return false;
         }
+
+        return true;
     }
 }

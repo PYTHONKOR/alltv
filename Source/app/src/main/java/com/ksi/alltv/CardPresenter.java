@@ -56,7 +56,7 @@ public class CardPresenter extends Presenter {
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent) {
-        Log.d(TAG, "onCreateViewHolder");
+        // Log.d(TAG, "onCreateViewHolder");
 
         sDefaultBackgroundColor =
                 ContextCompat.getColor(parent.getContext(), R.color.default_background);
@@ -90,7 +90,7 @@ public class CardPresenter extends Presenter {
         ChannelData tvCh = (ChannelData) item;
         ImageCardView cardView = (ImageCardView) viewHolder.view;
 
-        Log.d(TAG, "onBindViewHolder");
+        //Log.d(TAG, "onBindViewHolder");
 
         if (tvCh.getStillImageUrl() != null) {
 
@@ -99,15 +99,15 @@ public class CardPresenter extends Presenter {
 
             Boolean isAdultContent = false;
 
-            for (int i = 0; i < epgData.size(); i++) {
-                if (date.compareTo(epgData.get(i).getEndTime()) < 0) {
+            for(int i=0; i<epgData.size(); i++) {
+                if(date.compareTo(epgData.get(i).getEndTime()) < 0) {
                     tvCh.setProgramName(epgData.get(i).getProgramName());
                     isAdultContent = epgData.get(i).isAdultContent();
                     break;
                 }
             }
 
-            if (tvCh.getProgramName().equals("") || isAdultContent)
+            if(tvCh.getProgramName().equals("") || isAdultContent)
                 cardView.setTitleText(tvCh.getTitle());
             else
                 cardView.setTitleText(tvCh.getTitle() + " - " + tvCh.getProgramName());
@@ -116,25 +116,28 @@ public class CardPresenter extends Presenter {
 
             int ret = tvCh.getFavorite();
 
-            if (ret == 0)
+            if(ret == 0)
                 cardView.setBadgeImage(null);
-            else if (ret == 1)
+            else if(ret == 1)
                 cardView.setBadgeImage(cardView.getResources().getDrawable(R.drawable.star_icon, null));
-            else if (ret == 2)
+            else if(ret == 2)
+                cardView.setBadgeImage(cardView.getResources().getDrawable(R.drawable.wavve_icon_24, null));
+            else if(ret == 3)
+                cardView.setBadgeImage(cardView.getResources().getDrawable(R.drawable.tving_icon_24, null));
+            else if(ret == 4)
                 cardView.setBadgeImage(cardView.getResources().getDrawable(R.drawable.oksusu_icon_24, null));
-            else if (ret == 3)
-                cardView.setBadgeImage(cardView.getResources().getDrawable(R.drawable.pooq_icon_24, null));
 
             Picasso.get().load(tvCh.getStillImageUrl())
                     .memoryPolicy(MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE)
                     .into(cardView.getMainImageView());
+
         }
     }
 
     @Override
     public void onUnbindViewHolder(Presenter.ViewHolder viewHolder) {
 
-        Log.d(TAG, "onUnbindViewHolder");
+        // Log.d(TAG, "onUnbindViewHolder");
 
         ImageCardView cardView = (ImageCardView) viewHolder.view;
 

@@ -41,43 +41,43 @@ import java.util.Collections;
 import static android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP;
 
 
-public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment implements OnItemViewClickedListener {
+public class TvingRowSupportFragment extends AllTvBaseRowsSupportFragment implements OnItemViewClickedListener {
 
-    private static final String TAG = OksusuRowSupportFragment.class.getSimpleName();
+    private static final String TAG = TvingRowSupportFragment.class.getSimpleName();
 
-    private static SettingsData.OksusuQualityType mQualityType = SettingsData.OksusuQualityType.AUTO;
+    private static SettingsData.TvingQualityType mQualityType = SettingsData.TvingQualityType.HD;
 
-    public OksusuRowSupportFragment() {
+    public TvingRowSupportFragment() {
         setOnItemViewClickedListener(this);
-        mType = Utils.SiteType.Oksusu;
+        mType = Utils.SiteType.Tving;
     }
 
     public static void setChannelList(ArrayList<ChannelData> chList) {
-        AllTvBaseRowsSupportFragment.setChannelList(Utils.SiteType.Oksusu, chList);
+        AllTvBaseRowsSupportFragment.setChannelList(Utils.SiteType.Tving, chList);
     }
 
     public static void setCategoryList(ArrayList<CategoryData> ctList) {
-        AllTvBaseRowsSupportFragment.setCategoryList(Utils.SiteType.Oksusu, ctList);
+        AllTvBaseRowsSupportFragment.setCategoryList(Utils.SiteType.Tving, ctList);
     }
 
     public static void setAuthKey(String authKey) {
-        AllTvBaseRowsSupportFragment.setAuthKey(Utils.SiteType.Oksusu, authKey);
+        AllTvBaseRowsSupportFragment.setAuthKey(Utils.SiteType.Tving, authKey);
     }
 
     public static void setEnable(Boolean enable) {
-        AllTvBaseRowsSupportFragment.setEnable(Utils.SiteType.Oksusu, enable);
+        AllTvBaseRowsSupportFragment.setEnable(Utils.SiteType.Tving, enable);
     }
 
-    public static void setQualityType(SettingsData.OksusuQualityType inType) {
+    public static void setQualityType(SettingsData.TvingQualityType inType) {
         mQualityType = inType;
     }
 
     public static boolean updateFavoriteList(ArrayList<String> favorites) {
-        return AllTvBaseRowsSupportFragment.updateFavoriteList(Utils.SiteType.Oksusu, favorites);
+        return AllTvBaseRowsSupportFragment.updateFavoriteList(Utils.SiteType.Tving, favorites);
     }
 
     public static void updateEPG(ArrayList<ChannelData> chList) {
-        AllTvBaseRowsSupportFragment.updateEPG(Utils.SiteType.Oksusu, chList);
+        AllTvBaseRowsSupportFragment.updateEPG(Utils.SiteType.Tving, chList);
     }
 
     @Override
@@ -96,7 +96,7 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
     private void playVideo(int currentChannel) {
         if (PlayerActivity.active) return;
 
-        int requestCode = Utils.Code.OksusuPlay.ordinal();
+        int requestCode = Utils.Code.TvingPlay.ordinal();
         Intent intent = new Intent(getActivity(), PlayerActivity.class);
         intent.addFlags(FLAG_ACTIVITY_SINGLE_TOP);
         intent.putParcelableArrayListExtra(getStringById(R.string.CHANNELS_STR), mChannels.get(mType));
@@ -116,8 +116,11 @@ public class OksusuRowSupportFragment extends AllTvBaseRowsSupportFragment imple
             return;
         }
 
-        CardPresenter presenterSelector = new CardPresenter();
+        if (mAuthKey != null) {
+            String authKey = mAuthKey.get(mType);
+        }
 
+        CardPresenter presenterSelector = new CardPresenter();
         ArrayList<ChannelData> chList = mChannels.containsKey(mType) ? new ArrayList<>(mChannels.get(mType)) : new ArrayList<>();
         Collections.reverse(chList);
 

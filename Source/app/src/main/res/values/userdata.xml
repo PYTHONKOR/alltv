@@ -3,4 +3,7 @@
     <string name="OksusuPwd"></string>
     <string name="PooqId"></string>
     <string name="PooqPwd"></string>
+    <string name="CjOneTvingId"></string>
+    <string name="TvingId"></string>
+    <string name="TvingPwd"></string>
 </resources>
