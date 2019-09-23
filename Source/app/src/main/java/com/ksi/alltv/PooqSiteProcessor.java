@@ -32,6 +32,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -257,13 +258,13 @@ public class PooqSiteProcessor extends SiteProcessor {
             String requestUrl = getStringById(R.string.POOQ_LOGIN_URL) + "?" +
                     getStringById(R.string.MODE_STR) + "=" + getStringById(R.string.ID_STR) + "&" +
                     getStringById(R.string.ID_STR) + "=" + inSettingsData.mPooqSettings.mId + "&" +
-                    getStringById(R.string.PASSWORD_STR) + "=" + inSettingsData.mPooqSettings.mPassword + "&" +
+                    getStringById(R.string.PASSWORD_STR) + "=" + URLEncoder.encode(inSettingsData.mPooqSettings.mPassword, getStringById(R.string.UTF8_STR)) + "&" +
                     getStringById(R.string.POOQ_CREDENTIAL_STR) + "=" + getStringById(R.string.POOQ_CREDENTIAL_STR) + "&" +
                     getStringById(R.string.DEVICETYPEID_STR) + "=" + getStringById(R.string.PC_STR) + "&" +
                     getStringById(R.string.MARKETTYPEID_STR) + "=" + getStringById(R.string.GENERIC_STR) + "&" +
                     getStringById(R.string.CREDENTIAL_STR) + "=" + getStringById(R.string.POOQ_API_ACCESSKEY_STR);
 
-            HttpRequest postRequest = HttpRequest.post(requestUrl, true)
+            HttpRequest postRequest = HttpRequest.post(requestUrl, false)
                     .userAgent(getStringById(R.string.USERAGENT));
 
             if(postRequest == null || postRequest.badRequest() || postRequest.isBodyEmpty())
